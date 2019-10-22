@@ -140,3 +140,5 @@ elseif ($MAG -eq 1)
     Write-Host "Вы выбрали сервер:" $Server -ForegroundColor green
     CheckServices($Server)
 }
+
+pause
