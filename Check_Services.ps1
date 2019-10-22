@@ -31,6 +31,8 @@
 ##
 ##
 ##fd6a9f26a06ea3bc99616d4851b372ba
+
+
 #PO For Check Services Status on Remote Servers
 
 
@@ -75,7 +77,7 @@ Write-Host "=====================
 || 1: VRQ          ||
 || 2: VRX          ||
 || 3: VRA          ||
-=====================" -BackgroundColor DarkYellow
+=====================" -BackgroundColor DarkYellow -ForegroundColor Black
 $Contur = Read-Host "Выберите контур"
 
 if ($Contur -eq 1)
