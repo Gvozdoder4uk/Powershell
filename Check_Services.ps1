@@ -60,7 +60,7 @@ Function CheckServices([string]$Server)
      if ($Choice -eq "Y" -or "y")
      {
       Get-Service -Name Wildfly -ComputerName $Server | Start-Service
-      Write-Host "Выполняется запуск службы Wildfly"
+      Write-Warning "Выполняется запуск службы Wildfly"
      }
      elseif ($Choice -eq "N" -or "n")
      {
@@ -92,6 +92,7 @@ Function CheckServices([string]$Server)
      if ($Choice -eq "Y" -or "y")
      {
       Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Start-Service
+      Write-Warning "Выполняется запуск службы NTSwincash"
      }
      elseif ($Choice -eq "N" -or "n")
      {
@@ -103,7 +104,7 @@ Function CheckServices([string]$Server)
      
      
     }
-  pause  
+ pause
 }
 
 
