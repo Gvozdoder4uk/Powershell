@@ -74,8 +74,9 @@ Function CheckRelease([string]$SRV)
 
 Function KillWildfly([string]$SRV)
 {
-    Get-Process -Name java -ComputerName $SRV -ErrorAction SilentlyContinue | Format-List
-    (Get-WmiObject -Class Win32_Process -ComputerName $SRV -Filter "name='java.exe'").terminate()    
+    #Get-Process -Name java -ComputerName $SRV -ErrorAction SilentlyContinue | Format-List
+    (Get-WmiObject -Class Win32_Process -ComputerName $SRV -Filter "name='java.exe'").terminate() | Out-Null
+    Write-Output "Process Java was Terminated!"    
     Get-Service -Name Wildfly -ComputerName $SRV -ErrorAction SilentlyContinue | Stop-Service
 }
 
@@ -292,4 +293,5 @@ if ($select_menu -eq 4)
         Get-Service -Name Wildfly -ComputerName $server | Start-Service
     }
 }
+Write-Host "Работа программы завершена, сервисы были перезапущены!"
 pause
