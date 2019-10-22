@@ -36,7 +36,7 @@
 #PO For Check Services Status on Remote Servers
 
 
-
+$Choice = ""
 Function CheckServices([string]$Server)
 {
     $Wildfly = Get-Service -Name Wildfly -ComputerName $Server -ErrorAction SilentlyContinue
@@ -52,6 +52,23 @@ Function CheckServices([string]$Server)
      Write-Warning "============================================================="
      Write-Warning "Служба Wildfly НЕ ЗАПУЩЕНА!!! "
      Write-Warning "============================================================="
+     Write-Host "-------------------------------------------------------------"
+     Write-Host " Не желаете запустить службу сейчас? Y/N" -ForegroundColor Green
+     Write-Host "-------------------------------------------------------------"
+     $Choice = Read-Host " Сделайте выбор: "
+     
+     if ($Choice -eq "Y" -or "y")
+     {
+      Get-Service -Name Wildfly -ComputerName $Server | Start-Service
+      Write-Host "Выполняется запуск службы Wildfly"
+     }
+     elseif ($Choice -eq "N" -or "n")
+     {
+      Write-Warning "Служба Wildfly останется остановленной!"
+     }
+     else
+     {
+     }
     }
 
 
@@ -67,6 +84,24 @@ Function CheckServices([string]$Server)
      Write-Warning "============================================================="
      Write-Warning "Служба NTSwincash НЕ ЗАПУЩЕНА!!! "
      Write-Warning "============================================================="
+     Write-Host "-------------------------------------------------------------"
+     Write-Host " Не желаете запустить службу сейчас? Y/N" -ForegroundColor Green
+     Write-Host "-------------------------------------------------------------"
+     $Choice = Read-Host "Сделайте выбор: "
+     
+     if ($Choice -eq "Y" -or "y")
+     {
+      Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Start-Service
+     }
+     elseif ($Choice -eq "N" -or "n")
+     {
+      Write-Warning "Служба NTSwincash останется остановленной!"
+     }
+     else
+     {
+     }
+     
+     
     }
     
 }
@@ -140,5 +175,3 @@ elseif ($MAG -eq 1)
     Write-Host "Вы выбрали сервер:" $Server -ForegroundColor green
     CheckServices($Server)
 }
-
-pause
