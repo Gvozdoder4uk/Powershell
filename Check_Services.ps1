@@ -103,7 +103,7 @@ Function CheckServices([string]$Server)
      
      
     }
-    
+  pause  
 }
 
 
