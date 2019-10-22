@@ -74,39 +74,47 @@ Function CheckRelease([string]$SRV)
 
 Function KillWildfly([string]$SRV)
 {
-    Get-Process -Name java -ComputerName $SRV -ErrorAction SilentlyContinue | Format-List
-    $Status = Get-WmiObject -Class Win32_Process -ComputerName $SRV -Filter "name='java.exe'"
-    $Status.terminate()
+    #Get-Process -Name java -ComputerName $SRV -ErrorAction SilentlyContinue | Format-List
+    (Get-WmiObject -Class Win32_Process -ComputerName $SRV -Filter "name='java.exe'").terminate() | Out-Null
+    Write-Output "Process Java was Terminated!"    
     Get-Service -Name Wildfly -ComputerName $SRV -ErrorAction SilentlyContinue | Stop-Service
 }
 
 Function Release19_changes ([string]$SRV)
 {
+        Write-Warning "Выполняется удаление устаревших файлов и папок!"
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.failed" | Remove-Item
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Удаление выполнено!" -ForegroundColor Green
 
 }
 Function Release20_changes ([string]$SRV)
 {
+        Write-Warning "Выполняется удаление устаревших файлов и папок!"
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed",".readclaim*.","*.failed","*.facade*","*.transfer*" | Remove-Item
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Удаление выполнено!" -ForegroundColor Green
 }
 
 Function Release21_changes ([string]$SRV)
 {
+        Write-Warning "Выполняется удаление устаревших файлов и папок!"
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed",".readclaim*.","*.failed","*.facade*","*.transfer*" | Remove-Item        
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Удаление выполнено!" -ForegroundColor Green
 
 }
 
 Function Release22_changes ([string]$SRV)
 {
+        Write-Warning "Выполняется удаление устаревших файлов и папок!"
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed",".readclaim*.","*.failed","*.facade*","*.transfer*" | Remove-Item
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Удаление выполнено!" -ForegroundColor Green
 
 
 }
@@ -285,4 +293,5 @@ if ($select_menu -eq 4)
         Get-Service -Name Wildfly -ComputerName $server | Start-Service
     }
 }
+Write-Host "Работа программы завершена, сервисы были перезапущены!"
 pause
