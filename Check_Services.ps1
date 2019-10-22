@@ -14,7 +14,9 @@ Function CheckServices([string]$Server)
     }
     else
     {
-        Write-Warning "Служба Wildfly НЕ ЗАПУЩЕНА!!! "
+     Write-Warning "============================================================="
+     Write-Warning "Служба Wildfly НЕ ЗАПУЩЕНА!!! "
+     Write-Warning "============================================================="
     }
 
 
@@ -27,7 +29,9 @@ Function CheckServices([string]$Server)
     }
     else
     {
-        Write-Warning "Служба NTSwincash НЕ ЗАПУЩЕНА!!! "
+     Write-Warning "============================================================="
+     Write-Warning "Служба NTSwincash НЕ ЗАПУЩЕНА!!! "
+     Write-Warning "============================================================="
     }
     
 }
