@@ -35,6 +35,9 @@
 
 #PO For Check Services Status on Remote Servers
 
+DO
+{
+cls
 
 $Choice = ""
 Function CheckServices([string]$Server)
@@ -55,19 +58,13 @@ Function CheckServices([string]$Server)
      Write-Host "-------------------------------------------------------------"
      Write-Host " Не желаете запустить службу сейчас? Y/N" -ForegroundColor Green
      Write-Host "-------------------------------------------------------------"
-     $Choice = Read-Host " Сделайте выбор: "
-     
-     if ($Choice -eq "Y" -or "y")
+     $Choice = Read-Host " Сделайте выбор: Y/N"
+     Switch ($Choice) 
      {
-      Get-Service -Name Wildfly -ComputerName $Server | Start-Service
-      Write-Warning "Выполняется запуск службы Wildfly"
-     }
-     elseif ($Choice -eq "N" -or "n")
-     {
-      Write-Warning "Служба Wildfly останется остановленной!"
-     }
-     else
-     {
+        Y {Get-Service -Name Wildfly -ComputerName $Server | Start-Service
+           Write-Warning "Выполняется запуск службы Wildfly"}
+        N {Write-Warning "Служба Wildfly останется остановленной!"}
+
      }
     }
 
@@ -78,6 +75,14 @@ Function CheckServices([string]$Server)
      Write-Host "============================================================="
      Write-Host "Служба NTSwincash запущена и работает!" -ForegroundColor Green
      Write-Host "============================================================="
+     Write-Host " Не желаете ПЕРЕзапустить службу сейчас? Y/N" -ForegroundColor Green
+     $SET = Read-Host " Сделайте выбор: Y/N"
+     Switch ($SET)
+     {
+        Y {Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Restart-Service
+           Write-Warning "Выполняется Перезапуск службы NTSwincash"}
+        N {Write-Warning "Служба NTSwincash работает!"}
+     }
     }
     else
     {
@@ -87,22 +92,15 @@ Function CheckServices([string]$Server)
      Write-Host "-------------------------------------------------------------"
      Write-Host " Не желаете запустить службу сейчас? Y/N" -ForegroundColor Green
      Write-Host "-------------------------------------------------------------"
-     $Choice = Read-Host "Сделайте выбор: "
+     $Choice = Read-Host " Сделайте выбор: Y/N"
      
-     if ($Choice -eq "Y" -or "y")
+     Switch ($Choice) 
      {
-      Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Start-Service
-      Write-Warning "Выполняется запуск службы NTSwincash"
+        Y {Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Start-Service
+           Write-Warning "Выполняется запуск службы NTSwincash"}
+        N {Write-Warning "Служба NTSwincash останется остановленной!"}
      }
-     elseif ($Choice -eq "N" -or "n")
-     {
-      Write-Warning "Служба NTSwincash останется остановленной!"
-     }
-     else
-     {
-     }
-     
-     
+        
     }
  pause
 }
@@ -113,8 +111,12 @@ Write-Host "=====================
 || 1: VRQ          ||
 || 2: VRX          ||
 || 3: VRA          ||
+|| 0: EXIT         ||
 =====================" -BackgroundColor DarkYellow -ForegroundColor Black
 $Contur = Read-Host "Выберите контур"
+
+if($Contur -eq 0){ break } 
+#FORCE BREAK AFTER CHOICE
 
 if ($Contur -eq 1)
 {
@@ -176,3 +178,4 @@ elseif ($MAG -eq 1)
     Write-Host "Вы выбрали сервер:" $Server -ForegroundColor green
     CheckServices($Server)
 }
+} while ($Contur -ne 0)
