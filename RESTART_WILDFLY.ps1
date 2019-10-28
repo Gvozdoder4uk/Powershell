@@ -54,13 +54,16 @@
 
 
 
-chcp 65001
+DO 
+{
+cls
 <#Проведение восстановления релиза после падения сервисов#>
 #=======================================================================================================================
 $Server = ''
 $shopName = ''
 $MAG = ''
 $service =''
+$select_menu = ''
 #$PATH = "C`$\NTSwincash\jboss\wildfly10\standalone\deployments"
 #========================================================================================================================================================================================
 #БЛОК ФУНКЦИИ
@@ -127,9 +130,12 @@ Write-Host "=====================
 || 2: 20.0.0       ||
 || 3: 21.0.0       ||
 || 4: 22.0.0       ||
+|| 0: EXIT         ||
 =====================" -BackgroundColor DarkBlue
 
 $select_menu = Read-Host "Выберите пункт меню"
+
+if ($select_menu -eq 0) {break}
 
 #Write-Host "Вы выбрали релиз" $select_menu -ForegroundColor DarkYellow
 Write-Host "=====================
@@ -293,5 +299,8 @@ if ($select_menu -eq 4)
         Get-Service -Name Wildfly -ComputerName $server | Start-Service
     }
 }
-Write-Host "Работа программы завершена, сервисы были перезапущены!"
+Write-Host "Работа программы завершена, сейчас будет открыта директория с файлами сервисов!"
+Start-Sleep -Seconds 2
+Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
 pause
+} while ($select_menu -ne 0)
