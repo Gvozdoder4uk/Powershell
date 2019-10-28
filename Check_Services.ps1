@@ -35,6 +35,9 @@
 
 #PO For Check Services Status on Remote Servers
 
+DO
+{
+cls
 
 $Choice = ""
 Function CheckServices([string]$Server)
@@ -116,6 +119,9 @@ Write-Host "=====================
 =====================" -BackgroundColor DarkYellow -ForegroundColor Black
 $Contur = Read-Host "Выберите контур"
 
+if($Contur -eq 0){ break } 
+#FORCE BREAK AFTER CHOICE
+
 if ($Contur -eq 1)
 {
 $shopName = Read-Host "Введите магазин или нажмите Enter"
@@ -176,3 +182,4 @@ elseif ($MAG -eq 1)
     Write-Host "Вы выбрали сервер:" $Server -ForegroundColor green
     CheckServices($Server)
 }
+} while ($Contur -ne 0)
