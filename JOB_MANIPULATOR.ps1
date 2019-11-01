@@ -35,16 +35,30 @@ Function INTERFACES([string]$SRV)
     $PORT.TaskName
     foreach ($p in $PORT)
     {
+        $tst = $p.taskname
         Write-Host "Желаете запустить задачу?" $p.taskname
-        if ($p.State -eq 'Disabled')
+        $Choice = Read-Host "Сделайте выбор Y/N "
+        Switch ($Choice) 
         {
-        Write-Host "JOB В ГОВНЕ"
+            Y {
+            if ($p.State -eq 'Disabled')
+            {
+            Write-Host "JOB в статусе:" $p.State
+            Enable-ScheduledTask -CimSession $SRV -TaskName $p.TaskName
+            Start-Sleep -Seconds 2
+            $p.State
+            }
+            else
+            {
+            Write-host "JOB в статусе:"
+            Start-ScheduledTask -CimSession $SRV -TaskName $p.TaskName
+#           Disable-ScheduledTask -CimSession $SRV -TaskName $p.TaskName
+            }}
+         
+            N {Write-Warning "JOB $tst не будет запущен"}
         }
-        else
-        {
-        Write-host "JOB не в Говне"
-        }
-    }
+        
+       }
 
 }
 
@@ -59,10 +73,9 @@ Write-Host "|ЧТО ЖЕЛАЕШЬ ПОВЕЛИТЕЛЬ?                        
 |2. Запустим конкретный джоб?                         |
 |3. Выход из программы!                               |" -BackgroundColor DarkGreen 
 Write-Host "|IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII|" -BackgroundColor DarkGreen
+    $SelectJhin = Read-Host "|Слушаю и повинуюсь " 
 
-$SelectJhin = Read-Host "|Слушаю и повинуюсь " 
-
-if ($SelectJhin -eq '0'){break}
+        if ($SelectJhin -eq '0'){break}
 
 if ($SelectJhin -eq '1')
 {
@@ -72,11 +85,13 @@ Write-Host "IIIIIIIIIIIIIIIIIIIII
 || 2: VRX          ||
 IIIIIIIIIIIIIIIIIIIII" -BackgroundColor DarkGray -ForegroundColor Black
     $Contur = Read-Host "Выберите контур"
-    CONTUR($Contur)
-    $Server
-    #Get-ScheduledTask -CimSession $Server 
+    $Server = CONTUR($Contur)
+    Get-ScheduledTask -CimSession $Server -TaskName "FOBO*" | Format-Table TaskName,State
+    pause
 }
+
 elseif ($SelectJhin -eq '2')
+
 {
 Write-Host "IIIIIIIIIIIIIIIIIIIII
 ||Выберите контур: ||
@@ -89,7 +104,7 @@ IIIIIIIIIIIIIIIIIIIII" -BackgroundColor DarkCyan -ForegroundColor Black
     $Connect_to_Server = CONTUR($Contur)
     Write-Host "FUNC CONTUR FINISHED -  REULT ="$Server
     $Result_INT = INTERFACES($Connect_to_Server)
-
+    pause
 }
 
 }
