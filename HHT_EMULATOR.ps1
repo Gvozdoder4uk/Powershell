@@ -25,7 +25,7 @@ $S= "S$shopName"
 
 test-Path C:\NTSwincash\wm\update\
 
-if(test-Path C:\HHT_Emulator -eq "False")
+if(test-Path "C:\HHT_Emulator" -eq False)
 {
     New-Item -ItemType Directory "C:\HHT_Emulator"
 }
@@ -135,7 +135,7 @@ S119="202";`
 S120="326";`
 S121="23";`
 S122="266";`
-S123="197";`
+S123="198";`
 S124="256";`
 S125="221";`
 S126="404";`
