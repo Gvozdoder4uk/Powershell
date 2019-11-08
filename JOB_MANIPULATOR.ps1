@@ -1,5 +1,37 @@
-#chcp 65001
-#schtasks /Query /s "fobo-vrx-int2"
+﻿##[Ps1 To Exe]
+##
+##Kd3HDZOFADWE8uO1
+##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBn6RogaRFV5giH5V1m5FMEDQPQHscEdUAVnGuYC7rvEEuK6CLYLgehsJeyNqdI=
+##Kd3HFJGZHWLWoLaVvnQnhQ==
+##LM/RF4eFHHGZ7/K1
+##K8rLFtDXTiW5
+##OsHQCZGeTiiZ4NI=
+##OcrLFtDXTiW5
+##LM/BD5WYTiiZ4tI=
+##McvWDJ+OTiiZ4tI=
+##OMvOC56PFnzN8u+Vs1Q=
+##M9jHFoeYB2Hc8u+Vs1Q=
+##PdrWFpmIG2HcofKIo2QX
+##OMfRFJyLFzWE8uK1
+##KsfMAp/KUzWJ0g==
+##OsfOAYaPHGbQvbyVvnQX
+##LNzNAIWJGmPcoKHc7Do3uAuO
+##LNzNAIWJGnvYv7eVvnQX
+##M9zLA5mED3nfu77Q7TV64AuzAgg=
+##NcDWAYKED3nfu77Q7TV64AuzAgg=
+##OMvRB4KDHmHQvbyVvnQX
+##P8HPFJGEFzWE8tI=
+##KNzDAJWHD2fS8u+Vgw==
+##P8HSHYKDCX3N8u+Vgw==
+##LNzLEpGeC3fMu77Ro2k3hQ==
+##L97HB5mLAnfMu77Ro2k3hQ==
+##P8HPCZWEGmaZ7/K1
+##L8/UAdDXTlaDjofG5iZk2UD9fW4kZcyVhZKi14qo8PrQC95opyrOCeWY1pgetJkNh0LLFUXKBAGhiq3wnyI30r3HHvW6TacGnqNPeeqEo7E9KeogUnJEDKlMf0Zww72N5olPsBO0pf6bdYVtm91DOV/Ybl+fXczehp9ovEuN23002VkOG7KZ9g==
+##Kc/BRM3KXhU=
+##
+##
+##fd6a9f26a06ea3bc99616d4851b372ba
+
 $CNUM =''
 $CNAME = ''
 $Contur = ''
@@ -35,6 +67,7 @@ Function INTERFACES([string]$SRV)
     foreach ($p in $PORT)
     {
         $tst = $p.taskname
+        Write-Host "JOB в статусе:" $p.State -ForegroundColor DarkYellow
         Write-Host "Желаете запустить задачу?" $p.taskname
         $Choice = Read-Host "Сделайте выбор Y/N "
         Switch ($Choice) 
@@ -108,16 +141,16 @@ Function ENABLE_DISABLE([string]$SRV)
 
 do
 {
-    
+cls    
 
-Write-Host "|IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII|" -BackgroundColor DarkGreen
+Write-Host "|IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII|" -ForegroundColor DarkGreen
 Write-Host "|ЧТО ЖЕЛАЕШЬ ПОВЕЛИТЕЛЬ?                              |
 |1. Показать весь список задач на удаленной машине?   |
 |2. Запустим конкретный джоб?                         |
 |3. Отключить или включить джоб?                      |
-|0. Выход из программы!                               |" -BackgroundColor DarkGreen 
-Write-Host "|IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII|" -BackgroundColor DarkGreen
-    $SelectJhin = Read-Host "|Слушаю и повинуюсь " 
+|0. Выход из программы!                               |" -ForegroundColor DarkGreen
+Write-Host "|IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII|" -ForegroundColor DarkGreen
+$SelectJhin = Read-Host "|Слушаю и повинуюсь " 
 
         if ($SelectJhin -eq '0'){break}
 
@@ -166,7 +199,7 @@ IIIIIIIIIIIIIIIIIIIII" -BackgroundColor DarkCyan -ForegroundColor Black
      
 }
 }
-while ($SelectJhin -eq '0')
+while ($SelectJhin -ne '0')
 
 
 

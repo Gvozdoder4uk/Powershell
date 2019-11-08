@@ -26,7 +26,7 @@
 ##LNzLEpGeC3fMu77Ro2k3hQ==
 ##L97HB5mLAnfMu77Ro2k3hQ==
 ##P8HPCZWEGmaZ7/K1
-##L8/UAdDXTlaDjofG5iZk2UD9fW4kZcyVhZKi14qo8PrQiQDqfbsmfRREsxvKLWiYarwXTfB1
+##L8/UAdDXTlaDjofG5iZk2UD9fW4kZcyVhZKi14qo8PrQC95opyrOCeWY1pgetJkNh0LLFUXKBAGhiq3wnyI30r3HHvW6TacGnqNPeeqEo7E9KeogUnJEDKlMf0Zww72N5olPsBO0pf6bdYVtm91DOV/Ybl+Hd/3ViqxS9Wi95UoJ9W5zUK+Ek1k=
 ##Kc/BRM3KXhU=
 ##
 ##
@@ -95,7 +95,7 @@ Function Release19_changes ([string]$SRV)
 Function Release20_changes ([string]$SRV)
 {
         Write-Warning "Выполняется удаление устаревших файлов и папок!"
-        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed",".readclaim*.","*.failed","*.facade*","*.transfer*" | Remove-Item
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.readclaim.*","*.failed","*.facade*","*.transfer*" | Remove-Item
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
         Write-Host "Удаление выполнено!" -ForegroundColor Green
@@ -104,7 +104,7 @@ Function Release20_changes ([string]$SRV)
 Function Release21_changes ([string]$SRV)
 {
         Write-Warning "Выполняется удаление устаревших файлов и папок!"
-        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed",".readclaim*.","*.failed","*.facade*","*.transfer*" | Remove-Item        
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.readclaim.*","*.failed","*.facade*","*.transfer*" | Remove-Item        
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
         Write-Host "Удаление выполнено!" -ForegroundColor Green
@@ -114,7 +114,7 @@ Function Release21_changes ([string]$SRV)
 Function Release22_changes ([string]$SRV)
 {
         Write-Warning "Выполняется удаление устаревших файлов и папок!"
-        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed",".readclaim*.","*.failed","*.facade*","*.transfer*" | Remove-Item
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.readclaim.*","*.failed","*.facade*","*.transfer*" | Remove-Item
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data" -Recurse -Force -ErrorAction SilentlyContinue
         Write-Host "Удаление выполнено!" -ForegroundColor Green
