@@ -1,9 +1,198 @@
 ﻿# Load Windows Forms & Drawing classes.
 
-#GLOBAL VARIABLES
+#GLOBAL VARIABLE
 $Global:RLS=''
+# .Net methods for hiding/showing the console
+Add-Type -Name Window -Namespace Console -MemberDefinition '
+[DllImport("Kernel32.dll")]
+public static extern IntPtr GetConsoleWindow();
 
-#
+[DllImport("user32.dll")]
+public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
+'
+
+function Show-Console
+{
+    $consolePtr = [Console.Window]::GetConsoleWindow()
+    [Console.Window]::ShowWindow($consolePtr, 4)
+}
+
+function Hide-Console
+{
+    $consolePtr = [Console.Window]::GetConsoleWindow()
+    #0 hide
+    [Console.Window]::ShowWindow($consolePtr, 0)
+}
+
+
+#JOB MANIPULATOR
+Function JOB_WORKER([string]$SERVER){
+
+    $FontJob = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
+    $Imagejob =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\Worker2.jpg")
+    #Create JOB Form
+    $JobForm = New-Object System.Windows.Forms.Form
+    $JobForm.SizeGripStyle = "Hide"
+    $JobForm.BackgroundImage = $Imagejob
+    $JobForm.BackgroundImageLayout = "None"
+    $JobForm.Width = $Imagejob.Width
+    $JobForm.Height = $Imagejob.Height
+    $JobForm.StartPosition = "CenterScreen"
+    $JobForm.TopMost = $true
+    $JobForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
+    $JobForm.Text = "Список заданий сервера - $Server"
+    $JobForm.TopMost = 'True'
+
+    $JobForm.KeyPreview = $True
+    $JobForm.Add_KeyDown({
+    if ($_.KeyCode -eq "Escape") 
+    {$JobForm.Close()
+    }
+    })
+
+    
+    
+    if($Server -like '*vrq*')
+    {[System.Windows.Forms.MessageBox]::Show("Для VRQ среды пока беда!","VRQ")
+     return
+        }
+    elseif($Server -like '*ajb*')
+    {[System.Windows.Forms.MessageBox]::Show("Для серверов центра работа сервиса не предусмотрена!","Контуры")
+     return
+        }
+    elseif($Server -like '*int*')
+    {#[System.Windows.Forms.MessageBox]::Show("Выбран интерфейсный сервер","Интерфейс")
+    $JOBS_OF_SERVER = Get-ScheduledTask -CimSession $Server -TaskName "FOBO*"
+        }
+    elseif($Server -like '*a*')
+    {#[System.Windows.Forms.MessageBox]::Show("Сервер магазина!","Магазин")
+     $JOBS_OF_SERVER = Get-ScheduledTask -CimSession $Server -TaskName "JOB*"
+        }
+    
+
+    $JobList = New-Object System.Windows.Forms.ListBox
+    $JobList.Location = New-Object System.Drawing.Size(5,10)
+    $JobList.Size = '200,270'
+    $JobList.ScrollAlwaysVisible = 'False'
+    $JobList.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+
+    $JobList.DataSource = $JOBS_OF_SERVER.TaskName
+
+    $JobLabel = New-Object System.Windows.Forms.Label
+    $JobLabel.Location = New-Object System.Drawing.Size(210,10)
+    $JobLabel.Width = '200'
+    $JobLabel.Height = '30'
+    $JobLabel.ForeColor = 'Green'
+    $JobLabel.BackColor = 'Transparent'
+    $JobLabel.Text = '    Состояние задачи:'
+    
+
+    $JobStatus = New-Object System.Windows.Forms.Textbox
+    $JobStatus.Location = New-Object System.Drawing.Size(210,40)
+    $JobStatus.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+    $JobStatus.ReadOnly = 'True'
+    $JobStatus.Size = '150,23'
+    $JobStatus.Font = $FontJob
+    $JobStatus.Text = '  Состояние задачи'
+
+    $JL_SELECT ={
+       $JB = $JobList.SelectedItem 
+       $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+       $jobStatus.text = "            "+$JBSTAT.State
+       $JobLabel.Text = '      Cостояние задачи:     ' + $JB     
+    }
+    $JobList.add_SelectedIndexChanged($JL_SELECT)
+
+
+
+    $JobLabel1 = New-Object System.Windows.Forms.Label
+    $JobLabel1.Location = New-Object System.Drawing.Size(210,70)
+    $JobLabel1.Width = '200'
+    $JobLabel1.Height = '30'
+    $JobLabel1.ForeColor = 'Black'
+    $JobLabel1.BackColor = 'Transparent'
+    $JobLabel1.Text = '  Действия:'
+
+
+#Create START Button
+    $JobStart = New-Object System.Windows.Forms.RadioButton
+    $JobStart.Location =  New-Object System.Drawing.Point(210,90)
+    $JobStart.AutoSize = 'True'
+    $JobStart.BackColor = 'Transparent'
+    $JobStart.Text = 'Start'
+    $JobStart.Font = $FontJob
+#Create STOP Button
+    $JobStop = New-Object System.Windows.Forms.RadioButton
+    $JobStop.Location =  New-Object System.Drawing.Point(210,110)
+    $JobStop.AutoSize = 'True'
+    $JobStop.BackColor = 'Transparent'
+    $JobStop.Text = 'End'
+    $JobStop.Font = $FontJob
+#Create Enable Button
+    $JobEnable = New-Object System.Windows.Forms.RadioButton
+    $JobEnable.Location =  New-Object System.Drawing.Point(210,130)
+    $JobEnable.AutoSize = 'True'
+    $JobEnable.BackColor = 'Transparent'
+    $JobEnable.Text = 'Enable'
+    $JobEnable.Font = $FontJob
+#Create Disable Button
+    $JobDisable
+    $JobDisable= New-Object System.Windows.Forms.RadioButton
+    $JobDisable.Location =  New-Object System.Drawing.Point(210,150)
+    $JobDisable.AutoSize = 'True'
+    $JobDisable.BackColor = 'Transparent'
+    $JobDisable.Text = 'Disable'
+    $JobDisable.Font = $FontJob
+#Create Processing Button
+    $JobProcessButton = New-Object  System.Windows.Forms.Button
+    $JobProcessButton.Location = New-Object System.Drawing.Size(217,170)
+    $JobProcessButton.Text = "Process"
+
+    $JobProcessButton.add_Click({
+              
+              if($JobStart.Checked){
+                $JB = $JobList.SelectedItem
+                Start-ScheduledTask -CimSession $Server -TaskName $JB
+                Start-Sleep -Seconds 5
+                $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                $jobStatus.text = "            "+$JBSTAT.State
+                $JobLabel.Text = '      Cостояние задачи:     ' + $JB  
+              }
+              elseif($JobStop.Checked){
+                $JB = $JobList.SelectedItem
+                Stop-ScheduledTask -CimSession $Server -TaskName $JB
+                Start-Sleep -Seconds 5
+                $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                $jobStatus.text = "            "+$JBSTAT.State
+                $JobLabel.Text = '      Cостояние задачи:     ' + $JB
+              }
+              elseif($JobEnable.Checked){
+                $JB = $JobList.SelectedItem
+                Get-ScheduledTask -CimSession $Server -TaskName $JB | Enable-ScheduledTask
+                #Enable-ScheduledTask -CimSession $Server -TaskName $JB
+                Start-Sleep -Seconds 5
+                $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                $jobStatus.text = "            "+$JBSTAT.State
+                $JobLabel.Text = '      Cостояние задачи:     ' + $JB
+              }
+              elseif($JobDisable.Checked){
+                $JB = $JobList.SelectedItem
+                Get-ScheduledTask -CimSession $Server -TaskName $JB | Disable-ScheduledTask
+                #Disable-ScheduledTask -CimSession $Server -TaskName $JB
+                Start-Sleep -Seconds 5
+                $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                $jobStatus.text = "            "+$JBSTAT.State
+                $JobLabel.Text = '      Cостояние задачи:     ' + $JB
+              }
+    
+    })
+    
+    $JobForm.Controls.AddRange(@($JobStart,$JobStop,$JobEnable,$JobDisable))
+    $JobForm.Controls.AddRange(@($JobList,$JobStatus,$JobLabel,$JobLabel1,$JobProcessButton))
+    $JobForm.Add_Shown({$JobForm.Activate()})
+    $JobForm.ShowDialog()
+
+}
 
 
 ##########################################################################################################################################################################################################
@@ -12,7 +201,7 @@ $Global:RLS=''
 Function CheckServices([string]$Server)
 {
     $FontCheck = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
-    $ImageCheck =  [system.drawing.image]::FromFile("C:\Users\ks_fokin\Downloads\Services2.jpg")
+    $ImageCheck =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\Services.jpg")
     $FontLabelCheck = New-Object System.Drawing.Font("Colibri",11,[System.Drawing.FontStyle]::Bold)
 
     #CHECK SERVICES MAIN FORM 
@@ -31,10 +220,6 @@ Function CheckServices([string]$Server)
   
     $ServiceWildState = $Wildfly = Get-Service -Name Wildfly -ComputerName $Server -ErrorAction SilentlyContinue
     $ServiceNTSState = $NTSwincash = Get-Service -Name "NTSwincash distributor" -ComputerName $Server -ErrorAction SilentlyContinue
-
-    
-
-      
 
     #TEST LABEL
     $CheckLabelWild = New-Object System.Windows.Forms.Label
@@ -181,12 +366,10 @@ Function CheckServices([string]$Server)
         Get-Service -Name Wildfly -ComputerName $Server | Restart-Service
     })
     $StopWildBtn.add_Click({
+        (Get-WmiObject -Class Win32_Process -ComputerName $Server -Filter "name='java.exe'").terminate() | Out-Null
         Get-Service -Name Wildfly -ComputerName $Server | Stop-Service
     })
-    
-    
-    
-
+            
     #Start Service NTS
     $StartNTSBtn = New-Object System.Windows.Forms.Button
     $StartNTSBtn.Location = New-Object System.Drawing.Size(5,106)
@@ -452,7 +635,7 @@ $ProcessForm.Refresh()
 Function RELEASE_WINDOW(){
 
 $FontRelease = New-Object System.Drawing.Font("Colibri",10,[System.Drawing.FontStyle]::Bold)
-$ImageRelease =  [system.drawing.image]::FromFile("C:\Users\ks_fokin\Downloads\RLS2.png")
+$ImageRelease =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\RLS.png")
 
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
@@ -550,7 +733,7 @@ $VRX = ('1','2','3','4','5','6')
 $VRQ = ('1','2','3','4','5','6','7')
 # Create base form.
 
-$Image =  [system.drawing.image]::FromFile("C:\Users\ks_fokin\Downloads\NTS.jpg")
+$Image =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\NTS.jpg")
 $Font = New-Object System.Drawing.Font("Times New Roman",8,[System.Drawing.FontStyle]::Bold)
 
 # Initialize Main Form #
@@ -561,7 +744,7 @@ $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
 $objForm.Text = "Программа для безумного управления сервисами"
 $objForm.StartPosition = "CenterScreen"
-$objForm.Height = '380'
+$objForm.Height = '363'
 $objForm.Width = $Image.Width
 
 
@@ -576,7 +759,8 @@ $objForm.Add_KeyDown({
 })
 $objForm.Add_KeyDown({
     if ($_.KeyCode -eq "Escape") 
-    {$objForm.Close()
+    {
+        $objForm.Close()
     }
 })
 
@@ -788,31 +972,42 @@ $CheckServicesBTN.add_Click({
 })
 
 
-#$RestartButton.Add_Click({$x=$objListBox.SelectedItem;$objForm.Close()})
-$objForm.Controls.Add($RestartButton)
+$JobButton = New-Object System.Windows.Forms.Button
+$JobButton.Location = New-Object System.Drawing.Size(150,300)
+$JobButton.Size = New-Object System.Drawing.Size(75,24)
+$JobButton.Font = $Font
+$JobButton.Text = "JOB'S"
+
+$JobButton.add_Click({
+            
+        $Answer = CHECK_SETTINGS
+        switch($Answer){
+        "YES"{
+               JOB_WORKER($SERVER)
+               $Server = ''
+             }
+        "NO"{ return }
+        }    
+
+})
+
+
 
 # Cancel EXIT Button
 $CancelButton = New-Object System.Windows.Forms.Button
-$CancelButton.Location = New-Object System.Drawing.Size(450,300)
+$CancelButton.Location = New-Object System.Drawing.Size(440,300)
 $CancelButton.Size = New-Object System.Drawing.Size(75,23)
 $CancelButton.Text = "Закрыть программу"
 $CancelButton.Font = $Font
 $CancelButton.AutoSize = 'True'
 $CancelButton.Add_Click({$objForm.Close()})
+
+
+
+#ADD TO FORM
 $objForm.Controls.Add($CancelButton)
-
-
-
-
-
-
-#TABLO
-$objListBox = New-Object System.Windows.Forms.ListBox 
-$objListBox.Location = New-Object System.Drawing.Size(250,320) 
-$objListBox.Size = New-Object System.Drawing.Size(100,20)
-$objListBox.Height = 90
-
-
+$objForm.Controls.Add($JobButton)
+$objForm.Controls.Add($RestartButton)
 $objForm.Controls.Add($CheckServicesBTN)
 $objForm.Controls.Add($DeployWAR)
 $objForm.TopMost = $true
@@ -826,6 +1021,7 @@ $objForm.ShowDialog()
 #START MAIN PROGRAMM
 #
 #EXECUTION MAIN PROGRAMM
+Hide-Console
 GENERATOR
 ##########################################################################################################################################################################################################
 
