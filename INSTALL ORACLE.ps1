@@ -40,9 +40,31 @@
 #Редактируется переменная среды PATH
 #Выполняется копирование клиента на локальную машину пользователя в корень диска C
 #################################################################################################
+$OS = Get-WmiObject -Class Win32_OperatingSystem
+$OS.Caption
+$OS.OSArchitecture
 
+#C:\Users\Public\Desktop - общие ярлыки.
 
-Write-Host "MEGA PROJECT FOR DEPLOY SQLx86!"
+WRite-Host ':::::::::::::::::::::::::
+ВЫБЕРИТЕ ВЕРСИЮ SQLDEVELOPER
+:::::::::::::::::::::::::
+: 1.SQLDEVELOPER 4.0    :
+: 2.SQLDEVELOPER 3.2    :
+:::::::::::::::::::::::::'
+$VERSION = Read-Host ":Выберите Версию"
+
+if ($OS.OSArchitecture -like "*64*")
+{
+ Write-Host "Выбрана"$OS.OSArchitecture "система" 
+
+}
+elseif ($OS.OSArchitecture -like "*32*")
+{
+ Write-Host "Выбрана"$OS.OSArchitecture "система" 
+
+}
+<#Write-Host "MEGA PROJECT FOR DEPLOY SQLx86!"
 $server = Read-Host "Введите имя машины"
 C:\Windows\system32\psexec.exe \\$server cmd /c winrm quickconfig -quiet
 #$sessionUP = New-PSSession $server
@@ -50,4 +72,4 @@ Invoke-Command -ComputerName $server -ScriptBlock {
     [System.Environment]::SetEnvironmentVariable("ORACLE_HOME","P:\Oracle\Ora11_g","Machine")
     [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";P:\Oracle\Ora11_g", "Machine")
     xcopy "\\dubovenko\D\sqldeveloper" "C:\" /E /D
-}
+}#>
