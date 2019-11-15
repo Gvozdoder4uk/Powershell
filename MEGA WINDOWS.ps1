@@ -1,4 +1,36 @@
-﻿# Load Windows Forms & Drawing classes.
+﻿##[Ps1 To Exe]
+##
+##Kd3HDZOFADWE8uO1
+##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBnwarVaQFd49g==
+##Kd3HFJGZHWLWoLaVvnQnhQ==
+##LM/RF4eFHHGZ7/K1
+##K8rLFtDXTiW5
+##OsHQCZGeTiiZ4NI=
+##OcrLFtDXTiW5
+##LM/BD5WYTiiZ4tI=
+##McvWDJ+OTiiZ4tI=
+##OMvOC56PFnzN8u+Vs1Q=
+##M9jHFoeYB2Hc8u+Vs1Q=
+##PdrWFpmIG2HcofKIo2QX
+##OMfRFJyLFzWE8uK1
+##KsfMAp/KUzWJ0g==
+##OsfOAYaPHGbQvbyVvnQX
+##LNzNAIWJGmPcoKHc7Do3uAuO
+##LNzNAIWJGnvYv7eVvnQX
+##M9zLA5mED3nfu77Q7TV64AuzAgg=
+##NcDWAYKED3nfu77Q7TV64AuzAgg=
+##OMvRB4KDHmHQvbyVvnQX
+##P8HPFJGEFzWE8tI=
+##KNzDAJWHD2fS8u+Vgw==
+##P8HSHYKDCX3N8u+Vgw==
+##LNzLEpGeC3fMu77Ro2k3hQ==
+##L97HB5mLAnfMu77Ro2k3hQ==
+##P8HPCZWEGmaZ7/K1
+##L8/UAdDXTlaDjofG5iZk2UD9fW4kZcyVhZKi14qo8PrQnQr7ZtogZntbpWf5HE7d
+##Kc/BRM3KXhU=
+##
+##
+##fd6a9f26a06ea3bc99616d4851b372ba
 
 #GLOBAL VARIABLE
 $Global:RLS=''
@@ -24,10 +56,10 @@ function Hide-Console
     [Console.Window]::ShowWindow($consolePtr, 0)
 }
 
-
-#JOB MANIPULATOR
+##########################################################################################################################################################################################################
+#JOB MANIPULATOR START
 Function JOB_WORKER([string]$SERVER){
-
+    $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
     $FontJob = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
     $Imagejob =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\Worker2.jpg")
     #Create JOB Form
@@ -42,6 +74,7 @@ Function JOB_WORKER([string]$SERVER){
     $JobForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $JobForm.Text = "Список заданий сервера - $Server"
     $JobForm.TopMost = 'True'
+    $JobForm.Icon = $Icon
 
     $JobForm.KeyPreview = $True
     $JobForm.Add_KeyDown({
@@ -69,15 +102,15 @@ Function JOB_WORKER([string]$SERVER){
      $JOBS_OF_SERVER = Get-ScheduledTask -CimSession $Server -TaskName "JOB*"
         }
     
-
+#Create Listbox
     $JobList = New-Object System.Windows.Forms.ListBox
     $JobList.Location = New-Object System.Drawing.Size(5,10)
-    $JobList.Size = '200,270'
+    $JobList.Size = '200,260'
     $JobList.ScrollAlwaysVisible = 'False'
     $JobList.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
-
     $JobList.DataSource = $JOBS_OF_SERVER.TaskName
 
+#Label Status
     $JobLabel = New-Object System.Windows.Forms.Label
     $JobLabel.Location = New-Object System.Drawing.Size(210,10)
     $JobLabel.Width = '200'
@@ -104,7 +137,7 @@ Function JOB_WORKER([string]$SERVER){
     $JobList.add_SelectedIndexChanged($JL_SELECT)
 
 
-
+#Label Actions:
     $JobLabel1 = New-Object System.Windows.Forms.Label
     $JobLabel1.Location = New-Object System.Drawing.Size(210,70)
     $JobLabel1.Width = '200'
@@ -193,16 +226,18 @@ Function JOB_WORKER([string]$SERVER){
     $JobForm.ShowDialog()
 
 }
-
+#JOB MANIPULATOR END
+##########################################################################################################################################################################################################
 
 ##########################################################################################################################################################################################################
 #CHECK SERVICES FUNCTION START
-
 Function CheckServices([string]$Server)
 {
-    $FontCheck = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
+    $FontCheck = New-Object System.Drawing.Font("Colibri",7,[System.Drawing.FontStyle]::Bold)
     $ImageCheck =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\Services.jpg")
     $FontLabelCheck = New-Object System.Drawing.Font("Colibri",11,[System.Drawing.FontStyle]::Bold)
+    $FontStatus = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
+    $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
 
     #CHECK SERVICES MAIN FORM 
     $CheckForm = New-Object System.Windows.Forms.Form
@@ -216,209 +251,211 @@ Function CheckServices([string]$Server)
     $CheckForm.TopMost = $true
     $CheckForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $CheckForm.Text = "Монитор контроля сервисов $Server"
-    
-  
-    $ServiceWildState = $Wildfly = Get-Service -Name Wildfly -ComputerName $Server -ErrorAction SilentlyContinue
-    $ServiceNTSState = $NTSwincash = Get-Service -Name "NTSwincash distributor" -ComputerName $Server -ErrorAction SilentlyContinue
+    $CheckForm.Icon = $Icon
 
-    #TEST LABEL
-    $CheckLabelWild = New-Object System.Windows.Forms.Label
-    $CheckLabelWild.Location = New-Object System.Drawing.Size(0,20)
+    $CheckForm.KeyPreview = $True
+    $CheckForm.Add_KeyDown({
+    if ($_.KeyCode -eq "Escape") 
+    {$CheckForm.Close()
+    }
+    })
+
+
+    Function Checker_Wild([object]$ServiceWildState){
+        if($ServiceWildState.Status -eq 'Running')
+        {
+            $StatusWild.Text = $ServiceWildState.status
+            $StatusWild.BackColor = '#90ee90'
+        }
+        else
+        {
+            $StatusWild.Text = $ServiceWildState.status
+            $StatusWild.BackColor = 'Red'
+        }
+    }
+
+    Function Checker_NTS([object]$ServiceNTSState){
+        if($ServiceNTSState.Status -eq 'Running')
+        {
+            $StatusNTS.Text = $ServiceNTSState.status
+            $StatusNTS.BackColor = '#90ee90'
+        }
+        else
+        {
+            $StatusNTS.Text = $ServiceNTSState.status
+            $StatusNTS.BackColor = 'Red'
+        }
+    }
+
+
+
+    $ServiceWildState = $Wildfly = Get-Service -Name Wildfly -ComputerName $Server 
+    $ServiceNTSState = $NTSwincash = Get-Service -Name "NTSwincash distributor" -ComputerName $Server 
+
+#TEXTBOX WILDFLY
+    $CheckLabelWild = New-Object System.Windows.Forms.TextBox
+    $CheckLabelWild.Location = New-Object System.Drawing.Size(5,20)
     $CheckLabelWild.Width  = '170'
     $CheckLabelWild.Height = '25'
     $CheckLabelWild.Font = $FontLabelCheck
-    #$CheckLabelWild.AutoSize = 'True'
-    #$CheckLabelWild.BackColor = 'Transparent'
-    $CheckLabelWild.Text = "Сервис : Wildfly"
-    $CheckLabelWild.Visible = 'TRUE'
-    $CheckLabelWild.ClientRectangle.Width = 3000
-    $CheckLabelWild.ClientRectangle.Height = 20
-
-    $CheckLabelWild.add_paint(
-    {if($ServiceWildState.Status -eq 'Running'){
-    $brush  = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"green","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
-    else{
-    $brush  = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"red","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)
-    }
-    $brush2 = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"black","black")
-    $_.graphics.drawstring("Сервис : Wildfly",(new-object System.Drawing.Font("times new roman",14,[System.Drawing.FontStyle]::Bold)),$brush2,(new-object system.drawing.pointf(5,0)))
-    })
-     
-
-    $CheckLabelNTS= New-Object System.Windows.Forms.Label
-    $CheckLabelNTS.Location = New-Object System.Drawing.Size(0,80)
+    $CheckLabelWild.AutoSize = 'True'
+    $CheckLabelWild.Text = "  Сервис : Wildfly"
+    $CheckLabelWild.ReadOnly = 'True'
+    $CheckLabelWild.BackColor = '#90ee90'
+    $CheckLabelWild.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+    
+#TEXTBOX NTS
+    $CheckLabelNTS= New-Object System.Windows.Forms.TextBox
+    $CheckLabelNTS.Location = New-Object System.Drawing.Size(5,80)
     $CheckLabelNTS.Font = $FontLabelCheck
-    $CheckLabelNTS.Width  = '210'
+    $CheckLabelNTS.Width  = '200'
     $CheckLabelNTS.Height = '25'
-    #$CheckLabelNTS.AutoSize = 'True'
-    #$CheckLabelNTS.BackColor = 'Transparent'
-    $CheckLabelNTS.Text = "Сервис : NTSWincash"
-    $CheckLabelNTS.Visible = 'TRUE'
-    $CheckLabelNTS.add_paint(
-    {if($ServiceNTSState.Status -eq 'Running'){
-    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"orange","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
-    else{
-    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"red","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
+    $CheckLabelNTS.AutoSize = 'True'
+    $CheckLabelNTS.Text = " Сервис : NTSWincash"
+    $CheckLabelNTS.ReadOnly = 'True'
+    $CheckLabelNTS.BackColor = 'Orange'
+    $CheckLabelNTS.SelectionStart = '0'
+    $CheckLabelNTS.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
 
-    $brush2 = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"black","black")
-    $_.graphics.drawstring("Сервис : NTSWincash",(new-object System.Drawing.Font("times new roman",14,[System.Drawing.FontStyle]::Bold)),$brush2,(new-object system.drawing.pointf(5,0)))
-    })
+#Подпись Статуса
+    $STLabelW = New-Object System.Windows.Forms.Label
+    $STLabelW.Location = New-Object System.Drawing.Point(210,5)
+    $STLabelW.AutoSize = 'True'
+    $STLabelW.Font = $FontCheck
+    $STLabelW.Text = 'Состояние задания:'
+    $STLabelW.BackColor = 'Transparent'
 
-
-    #Окно текущего статуса WILDFLY
-    $StatusWild= New-Object System.Windows.Forms.Label
-    $StatusWild.Location = New-Object System.Drawing.Size(220,20)
-    $StatusWild.Font = $FontLabelCheck
+#Подпись Статуса 2
+    $STLabelN = New-Object System.Windows.Forms.Label
+    $STLabelN.Location = New-Object System.Drawing.Point(210,67)
+    $STLabelN.AutoSize = 'True'
+    $STLabelN.Font = $FontCheck
+    $STLabelN.Text = 'Состояние задания:'
+    $STLabelN.BackColor = 'Transparent'
+            
+#Окно текущего статуса WILDFLY
+    $StatusWild= New-Object System.Windows.Forms.TextBox
+    $StatusWild.Location = New-Object System.Drawing.Size(215,20)
+    $StatusWild.Font = $FontStatus
     $StatusWild.Width  = '90'
-    $StatusWild.Height = '25'
-    $StatusWild.BackColor = 'Transparent'
-    $StatusWild.Visible = 'TRUE'
-
-    $StatusWild.add_paint(
-    {if($ServiceWildState.Status -eq 'Running'){
-    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),(new-object system.drawing.point 0,0),"green","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
-    else{
-    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),(new-object system.drawing.point 0,0),"red","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
-
-    $brush2 = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"black","black")
-    $_.graphics.drawstring($ServiceWildState.status,(new-object System.Drawing.Font("times new roman",14,[System.Drawing.FontStyle]::Bold)),$brush2,(new-object system.drawing.pointf(5,0)))
-    })
-
-    #Окно текущего статуса NTS WINCASH
-    $StatusNts =
-    $StatusNts = New-Object System.Windows.Forms.Label
-    $StatusNts.Location = New-Object System.Drawing.Size(220,80)
-    $StatusNts.Font = $FontLabelCheck
+    $StatusWild.Height = '30'
+    $StatusWild.ReadOnly  = 'True'
+    $StatusWild.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+    Checker_Wild($ServiceWildState)
+    
+#Окно текущего статуса NTS WINCASH
+    $StatusNts = New-Object System.Windows.Forms.TextBox
+    $StatusNts.Location = New-Object System.Drawing.Size(215,80)
+    $StatusNts.Font = $FontStatus
     $StatusNts.Width  = '90'
-    $StatusNts.Height = '25'
-    $StatusNts.BackColor = 'Transparent'
-    $StatusNts.Visible = 'TRUE'
+    $StatusNts.Height = '30'
+    $StatusNts.ReadOnly  = 'True'
+    $StatusNts.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+    Checker_NTS($ServiceNTSState)
 
-    #Create ToolTip
+#Create ToolTip
     $ToolTipService = New-Object System.Windows.Forms.ToolTip
     $ToolTipService.BackColor = [System.Drawing.Color]::LightGoldenrodYellow
-    #$ToolTipService.IsBalloon = $true
-    $ToolTipService.SetToolTip($StatusWild,"НАЖМИ ДЛЯ ОБНОВЛЕНИЯ СТАТУСА")
-    $ToolTipService.SetToolTip($StatusNts,"НАЖМИ ДЛЯ ОБНОВЛЕНИЯ СТАТУСА")
-
-    $StatusWild.add_Click({
-        $ServiceWildState = $Wildfly = Get-Service -Name Wildfly -ComputerName $Server -ErrorAction SilentlyContinue
-        $StatusWild.Text = $ServiceWildState
-    })
-
-
-    $StatusNts.add_Click({
-        $ServiceNTSState = $NTSwincash = Get-Service -Name "NTSwincash distributor" -ComputerName $Server -ErrorAction SilentlyContinue
-        $StatusNts.Text = $ServiceNTSState
-    })
-
-    $StatusNts.add_paint(
-    {if($ServiceNTSState.Status -eq 'Running'){
-    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),(new-object system.drawing.point 0,0),"orange","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
+    $ToolTipService.SetToolTip($StatusWild,"Click For Update Status")
+    $ToolTipService.SetToolTip($StatusNts,"Click For Update Status")
     
-    else{
-    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),(new-object system.drawing.point 0,0),"red","white")
-    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
-
-    $brush2 = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"black","black")
-    $_.graphics.drawstring($ServiceNTSState.Status,(new-object System.Drawing.Font("times new roman",14,[System.Drawing.FontStyle]::Bold)),$brush2,(new-object system.drawing.pointf(5,0)))
-    })
-
-
-    #Start Service Wildfly
+#Start Service Wildfly
     $StartWildBtn = New-Object System.Windows.Forms.Button
     $StartWildBtn.Location = New-Object System.Drawing.Size(5,46)
-    $StartWildBtn.Size = New-Object System.Drawing.Size(35,20)
+    $StartWildBtn.Size = New-Object System.Drawing.Size(50,20)
     $StartWildBtn.Text = "START"
     $StartWildBtn.Font = $FontCheck
-    $StartWildBtn.AutoSize = 'True'
     $StartWildBtn.ForeColor = 'green'
-    #Restart Service Wildfly
+
+#Restart Service Wildfly
     $RestartWildBtn = New-Object System.Windows.Forms.Button
-    $RestartWildBtn.Location = New-Object System.Drawing.Size(60,46)
-    $RestartWildBtn.Size = New-Object System.Drawing.Size(35,20)
+    $RestartWildBtn.Location = New-Object System.Drawing.Size(57,46)
+    $RestartWildBtn.Size = New-Object System.Drawing.Size(65,20)
     $RestartWildBtn.Text = "RESTART"
     $RestartWildBtn.Font = $FontCheck
-    $RestartWildBtn.AutoSize = 'True'
+    #$RestartWildBtn.AutoSize = 'True'
     $RestartWildBtn.ForeColor = 'Blue'
-    #Stop Service Wildfly
+
+#Stop Service Wildfly
     $StopWildBtn = New-Object System.Windows.Forms.Button
-    $StopWildBtn.Location = New-Object System.Drawing.Size(133,46)
-    $StopWildBtn.Size = New-Object System.Drawing.Size(75,23)
+    $StopWildBtn.Location = New-Object System.Drawing.Size(125,46)
+    $StopWildBtn.Size = New-Object System.Drawing.Size(50,20)
     $StopWildBtn.Text = "STOP"
     $StopWildBtn.Font = $FontCheck
-    $StopWildBtn.AutoSize = 'True'
     $StopWildBtn.ForeColor = 'Red'
 
 
-    #EVENT WILDFLY BTN
+#EVENT WILDFLY BTN
     $StartWildBtn.add_Click({
-        Get-Service -Name Wildfly -ComputerName $Server | Start-Service
+        $ServiceWildState =  Get-Service -Name Wildfly -ComputerName $Server | Start-Service
     })
     $RestartWildBtn.add_Click({
-        Get-Service -Name Wildfly -ComputerName $Server | Restart-Service
+        (Get-WmiObject -Class Win32_Process -ComputerName $Server -Filter "name='java.exe'").terminate() | Out-Null
+        $ServiceWildState = Get-Service -Name Wildfly -ComputerName $Server | Restart-Service
     })
     $StopWildBtn.add_Click({
         (Get-WmiObject -Class Win32_Process -ComputerName $Server -Filter "name='java.exe'").terminate() | Out-Null
-        Get-Service -Name Wildfly -ComputerName $Server | Stop-Service
+        $ServiceWildState = Get-Service -Name Wildfly -ComputerName $Server | Stop-Service
     })
             
-    #Start Service NTS
+#Start Service NTS
     $StartNTSBtn = New-Object System.Windows.Forms.Button
     $StartNTSBtn.Location = New-Object System.Drawing.Size(5,106)
-    $StartNTSBtn.Size = New-Object System.Drawing.Size(35,20)
+    $StartNTSBtn.Size = New-Object System.Drawing.Size(50,20)
     $StartNTSBtn.Text = "START"
     $StartNTSBtn.Font = $FontCheck
-    $StartNTSBtn.AutoSize = 'True'
     $StartNTSBtn.ForeColor = 'Green'
-    #Restart Service NTS
+
+#Restart Service NTS
     $RestartNTSBtn = New-Object System.Windows.Forms.Button
-    $RestartNTSBtn.Location = New-Object System.Drawing.Size(60,106)
-    $RestartNTSBtn.Size = New-Object System.Drawing.Size(35,20)
+    $RestartNTSBtn.Location = New-Object System.Drawing.Size(58,106)
+    $RestartNTSBtn.Size = New-Object System.Drawing.Size(65,20)
     $RestartNTSBtn.Text = "RESTART"
     $RestartNTSBtn.Font = $FontCheck
-    $RestartNTSBtn.AutoSize = 'True'
     $RestartNTSBtn.ForeColor = 'Blue'
-    #Stop Service NTS
+
+#Stop Service NTS
     $StopNTSBtn = New-Object System.Windows.Forms.Button
-    $StopNTSBtn.Location = New-Object System.Drawing.Size(133,106)
-    $StopNTSBtn.Size = New-Object System.Drawing.Size(75,23)
+    $StopNTSBtn.Location = New-Object System.Drawing.Size(125,106)
+    $StopNTSBtn.Size = New-Object System.Drawing.Size(50,20)
     $StopNTSBtn.Text = "STOP"
     $StopNTSBtn.Font = $FontCheck
-    $StopNTSBtn.AutoSize = 'True'
     $StopNTSBtn.ForeColor = 'Red'
-
-    #EVENT NTS BTN
+    
+#EVENT NTS BTN
     $StartNTSBtn.add_Click({
-        Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Start-Service
+        $ServiceNTSState =  Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Start-Service
     })
     $RestartNTSBtn.add_Click({
-        Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Restart-Service
+        (Get-WmiObject -Class Win32_Process -ComputerName $Server -Filter "name='javaw.exe'").terminate() | Out-Null
+        $ServiceNTSState = Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Restart-Service
     })
     $StopNTSBtn.add_Click({
-        Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Stop-Service
+        (Get-WmiObject -Class Win32_Process -ComputerName $Server -Filter "name='javaw.exe'").terminate() | Out-Null
+        $ServiceNTSState = Get-Service -Name "NTSwincash distributor" -ComputerName $Server | Stop-Service
+
     })
 
-    $CheckForm.Controls.AddRange(@($CheckLabelNTS,$CheckLabelWild,$StatusWild,$StatusNts))
+#EVENTS FOR UPDATE STATUS
+        $StatusWild.add_Click({
+        $ServiceWildState = $Wildfly = Get-Service -Name Wildfly -ComputerName $Server 
+        Checker_Wild($ServiceWildState)
+    })
+
+    $StatusNts.add_Click({
+        $ServiceNTSState = $NTSwincash = Get-Service -Name "NTSwincash distributor" -ComputerName $Server 
+        Checker_NTS($ServiceNTSState)
+    })
+
+    $CheckForm.Controls.AddRange(@($CheckLabelNTS,$CheckLabelWild,$StatusWild,$StatusNts,$STLabelW,$STLabelN))
     $CheckForm.Controls.AddRange(@($StartWildBtn,$RestartWildBtn,$StopWildBtn))
     $CheckForm.Controls.AddRange(@($StartNTSbtn,$RestartNTSBtn,$StopNTSBtn))
-    $CheckForm.Controls.Add($pbrTest)
-    $CheckForm.Add_Shown({$CheckForm.Activate()})
-    #$CheckForm.Controls.AddRange(@($ReleaseButton0,$ReleaseButton1,$ReleaseButton2,$ReleaseButton3))
-    #$CheckForm.ShowDialog()
+    #$CheckForm.Controls.Add($pbrTest)
     $CheckForm.Add_Shown({$CheckForm.Activate()})
     $CheckForm.ShowDialog()
     $ServiceNTSState = ''
     $ServiceWildState = ''
 }
-
 #CHECK SERVICES FUNCTION END
 ##########################################################################################################################################################################################################
 
@@ -470,7 +507,8 @@ Function CHECK_SETTINGS(){
     else
     {
      $Global:SERVER = 'fobo-'+ $SRED + "-" + $CONT + $MACHINE
-     $Answer = [System.Windows.Forms.MessageBox]::Show("Выбрана машина: " + $SERVER + ". ВЫБОР ВЕРЕН?","Выбор сделан",'YesNo','WARNING')     
+     $Answer = [System.Windows.Forms.MessageBox]::Show("Выбрана машина: " + $SERVER + ".
+Подтверждаем выбор?","Выбор сделан",'YesNo','WARNING')     
     }
 
  return $Answer
@@ -480,67 +518,91 @@ Function CHECK_SETTINGS(){
 ##########################################################################################################################################################################################################
 #ReDeploy WARNIKA
 Function REDEPLOY([string]$Server){
+  $ChoiceD = [System.Windows.Forms.MessageBox]::Show("YES: Выполнить передеплой существующего сервиса.
+NO: Выбрать файл и выполнить передеплой.
+Cancel: Выход","Выбор действия!","YesNoCancel")
+  switch($ChoiceD)
+  {
+    "YES" {
+            $DestinationPoint = "\\" + $Server + "\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+            Add-Type -AssemblyName System.Windows.Forms
+            $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+            InitialDirectory = $DestinationPoint
+            Filter = 'Deploy (*.war)|*.war|Все файлы |*.*'
+            Title = 'Выберите файл сервиса для деплоя'}
+            $FileBrowser.ShowDialog()
+            $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
+            $TST = $FileBrowser.SafeFileName
+            if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
+            Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+            Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
+            Start-Sleep 13
+            Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item
 
-  Add-Type -AssemblyName System.Windows.Forms
-  $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
-  Filter = 'Deploy (*.war)|*.war|Все файлы |*.*'
-  Title = 'Выберите файл сервиса для деплоя'}
-  $FileBrowser.ShowDialog()
+    
+    }
+    "NO"{
+            Add-Type -AssemblyName System.Windows.Forms
+            $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+            Filter = 'Deploy (*.war)|*.war|Все файлы |*.*'
+            Title = 'Выберите файл сервиса для деплоя'}
+            $FileBrowser.ShowDialog()
 
+            $DestinationPoint = "\\" + $Server + "\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+            $PathTest = Test-Path $DestinationPoint
+            #$DestinationPoint = 'C:\1\deployments\'
+            $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
+            $TST = $FileBrowser.SafeFileName
+            if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
+            $FileTestName = $FileBrowser.SafeFileName -split ".war"
+            $ProvFile = [System.Windows.Forms.MessageBox]::Show("Будет выполнен деплой файла " + $TST+ ". На сервер :" + $Server,"Путь деплоя","OKCancel",'Info')
+            switch($ProvFile)
+            {
+             "Cancel"{[System.Windows.Forms.MessageBox]::Show("Отмена Деплоя!");return}
+            }
+
+            $FileTest = Test-Path $DestinationFileName
   
-  $DestinationPoint = "\\" + $Server + "\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
-  $PathTest = Test-Path $DestinationPoint
-  #$DestinationPoint = 'C:\1\deployments\'
-  $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
-  $TST = $FileBrowser.SafeFileName
-  if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
-  $FileTestName = $FileBrowser.SafeFileName -split ".war"
-  $ProvFile = [System.Windows.Forms.MessageBox]::Show("Будет выполнен деплой файла " + $TST+ ". На сервер :" + $Server,"Путь деплоя","OKCancel",'Info')
-  switch($ProvFile)
-  {
-    "Cancel"{[System.Windows.Forms.MessageBox]::Show("Отмена Деплоя!");return}
-  }
-  #Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
-  #Compare-Object -ReferenceObject $Hash1 -DifferenceObject $Hash2
 
-  $FileTest = Test-Path $DestinationFileName
-  
+            if($PathTest -eq $False)
+            {
+                [System.Windows.MessageBox]::Show("Путь не существует, или недоступен,проверьте выбор сервера")
+                return
+            }
+            elseif($FileTest -eq $False)
+            {
+                [System.Windows.MessageBox]::Show("Сервиса ранее не было на сервере, проверьте выбор файла")
+                return
+            }
+            elseif($PathTest -eq $True -and $FileTest -eq $True)
+            {
 
-  if($PathTest -eq $False)
-  {
-   [System.Windows.MessageBox]::Show("Путь не существует, или недоступен,проверьте выбор сервера")
-   return
-  }
-  elseif($FileTest -eq $False)
-  {
-    [System.Windows.MessageBox]::Show("Сервиса ранее не было на сервере, проверьте выбор файла")
-    return
-  }
-  elseif($PathTest -eq $True -and $FileTest -eq $True)
-  {
+                Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
+                Rename-Item $DestinationFileName -NewName "$DestinationFileName.backup"
+                Copy-Item -Path $FileBrowser.FileName -Destination $DestinationFileName
+                Start-Sleep 13
+                Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item         
+                $Hash1 = Get-FileHash $FileBrowser.FileName
+                $Hash2 = Get-FileHash $DestinationFileName
 
-    Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
-    Rename-Item $DestinationFileName -NewName "$DestinationFileName.backup"
-    Copy-Item -Path $FileBrowser.FileName -Destination $DestinationFileName
-    Start-Sleep 20
-    Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item         
-    $Hash1 = Get-FileHash $FileBrowser.FileName
-    $Hash2 = Get-FileHash $DestinationFileName
-    #[System.Windows.MessageBox]::Show($Hash1.Hash)
-    #[System.Windows.MessageBox]::Show($Hash2.Hash)
-        if ($Hash1.Hash -eq $Hash2.Hash -and $Hash1.Hash -ne $NULL -and $Hash2.Hash -ne $NULL)
-        {[System.Windows.MessageBox]::Show("Файл успешно перенесен $DestinationFileName","Перенос файла успешен")}
-        else
-        {
-        $CHECKHASH = [System.Windows.MessageBox]::Show("Файл перенесен в $DestinationFileName с ошибками
-        Будет выполнено восстановление файла!","Перенос файла провалился","OK",'ERROR')
-        Switch($CHECKHASH){
-        "OK"{
-        Rename-Item $DestinationFileName -NewName "$DestinationFileName.backup.FAILED"
-        Rename-Item "$DestinationFileName.backup" -NewName "$DestinationFileName"}
-        }
+                if ($Hash1.Hash -eq $Hash2.Hash -and $Hash1.Hash -ne $NULL -and $Hash2.Hash -ne $NULL)
+                    {[System.Windows.MessageBox]::Show("Файл успешно перенесен $DestinationFileName","Перенос файла успешен")}
+                    else
+                    {
+                    $CHECKHASH = [System.Windows.MessageBox]::Show("Файл перенесен в $DestinationFileName с ошибками
+                    Будет выполнено восстановление файла!","Перенос файла провалился","OK",'ERROR')
+                    Switch($CHECKHASH){
+                    "OK"{
+                    Rename-Item $DestinationFileName -NewName "$DestinationFileName.backup.FAILED"
+                    Rename-Item "$DestinationFileName.backup" -NewName "$DestinationFileName"}
+                        }
         
-  }
+            }
+         }
+         Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+    }
+    "CANCEL"{return}
+
   }
 
 }
@@ -550,7 +612,17 @@ Function REDEPLOY([string]$Server){
 #RESTART WILDFLY DELETE FILES
 Function KillWildfly([string]$SRV)
 {
-    
+    if($Server -like '*int*')
+    {
+     #[System.Windows.Forms.MessageBox]::Show("ИНТЕРФЕЙС")
+     (Get-WmiObject -Class Win32_Process -ComputerName $SRV -Filter "name='java.exe'").terminate() | Out-Null    
+     Get-Service -Name Wildfly -ComputerName $SRV -ErrorAction SilentlyContinue | Stop-Service
+     Start-Sleep -Seconds 3
+     Get-Service -Name Wildfly -ComputerName $server | Start-Service
+     Start-Sleep -Seconds 2
+     Invoke-Item "\\$Server\C`$\wildfly\wildfly10\standalone\deployments" 
+    }
+    else{
     #Get-Process -Name java -ComputerName $SRV -ErrorAction SilentlyContinue | Format-List
     (Get-WmiObject -Class Win32_Process -ComputerName $SRV -Filter "name='java.exe'").terminate() | Out-Null    
     Get-Service -Name Wildfly -ComputerName $SRV -ErrorAction SilentlyContinue | Stop-Service
@@ -576,10 +648,11 @@ Function KillWildfly([string]$SRV)
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
     }
     Start-Sleep -Seconds 3
-    Progress
+    #Progress
     Get-Service -Name Wildfly -ComputerName $server | Start-Service
     Start-Sleep -Seconds 2
     Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+    }
 }
 ##########################################################################################################################################################################################################
 
@@ -636,7 +709,7 @@ Function RELEASE_WINDOW(){
 
 $FontRelease = New-Object System.Drawing.Font("Colibri",10,[System.Drawing.FontStyle]::Bold)
 $ImageRelease =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\RLS.png")
-
+$Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
 
@@ -645,13 +718,13 @@ $ReleaseForm = New-Object System.Windows.Forms.Form
 $ReleaseForm.SizeGripStyle = "Hide"
 $ReleaseForm.BackgroundImage = $ImageRelease
 $ReleaseForm.BackgroundImageLayout = "None"
-$ReleaseForm.Size = New-Object System.Drawing.Size(150,160)
+$ReleaseForm.Size = New-Object System.Drawing.Size(150,165)
 $ReleaseForm
 $ReleaseForm.StartPosition = "CenterScreen"
 $ReleaseForm.TopMost = $true
 $ReleaseForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedToolWindow
 $ReleaseForm.Text = "ВЫБЕРИТЕ РЕЛИЗ"
-
+$ReleaseForm.Icon  = $Icon
 
 
 
@@ -735,6 +808,8 @@ $VRQ = ('1','2','3','4','5','6','7')
 
 $Image =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\NTS.jpg")
 $Font = New-Object System.Drawing.Font("Times New Roman",8,[System.Drawing.FontStyle]::Bold)
+$Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
+
 
 # Initialize Main Form #
 $objForm = New-Object System.Windows.Forms.Form 
@@ -744,9 +819,9 @@ $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
 $objForm.Text = "Программа для безумного управления сервисами"
 $objForm.StartPosition = "CenterScreen"
-$objForm.Height = '363'
+$objForm.Height = '370'
 $objForm.Width = $Image.Width
-
+$objForm.Icon = $Icon
 
 # Configure keyboard intercepts for ESC & ENTER.
 
@@ -876,6 +951,7 @@ $Combo_Srez = New-Object System.Windows.Forms.ComboBox
 $Combo_Srez.AutoSize = 'True'
 $Combo_Srez.Location = New-Object System.Drawing.Size(10,30)
 $Combo_Srez.Text = 'Выберите станцию'
+$Combo_Srez.DropDownStyle = 'DropDownList'
             if($RadioVRQ.Checked)
             {
              $Combo_Srez.DataSource = $VRQ}
@@ -921,9 +997,12 @@ $RestartButton.Add_Click(
 {
     $Answer = CHECK_SETTINGS
     switch($Answer){
-        "YES"{
+        "YES"{ if($Server -like '*int*')
+               { KillWildfly($SERVER) }
+               else{
                RELEASE_WINDOW
                KillWildfly($SERVER)
+               }
                $Server = ''
                $RLS = ''
              }
@@ -982,7 +1061,7 @@ $JobButton.add_Click({
             
         $Answer = CHECK_SETTINGS
         switch($Answer){
-        "YES"{
+        "YES"{ 
                JOB_WORKER($SERVER)
                $Server = ''
              }
@@ -1077,3 +1156,18 @@ $Server = "C:\1\"
   $Hash2 = Get-FileHash $DestinationPoint
   #
 #>
+
+<#
+    $StatusNts.add_paint(
+    {if($ServiceNTSState.Status -eq 'Running'){
+    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),(new-object system.drawing.point 0,0),"orange","white")
+    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
+    
+    else{
+    $brush = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),(new-object system.drawing.point 0,0),"red","white")
+    $_.graphics.fillrectangle($brush,$this.clientrectangle)}
+
+    $brush2 = new-object System.Drawing.Drawing2D.LinearGradientBrush((new-object system.drawing.point 0,0),(new-object system.drawing.point($this.clientrectangle.width,$this.clientrectangle.height)),"black","black")
+    $_.graphics.drawstring($ServiceNTSState.Status,(new-object System.Drawing.Font("times new roman",11,[System.Drawing.FontStyle]::Bold)),$brush2,(new-object system.drawing.pointf(20,3)))
+    })
+    #>
