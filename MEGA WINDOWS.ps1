@@ -57,6 +57,268 @@ function Hide-Console
 }
 
 ##########################################################################################################################################################################################################
+#AUTOINSTALL FOBO START
+#
+Function DEPLOYFOBO([string]$Machine,[string]$Server){
+     
+}
+
+Function FOBO_INSTALL([string]$Server)
+{
+    $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
+    $FontJob = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
+    $Image =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\Fobo_INTERFACE.jpg")
+
+    #Create FOBO FORM
+    $Fobo_Form = New-Object System.Windows.Forms.Form
+    $Fobo_Form.SizeGripStyle = "Hide"
+    $Fobo_Form.BackgroundImage = $Image
+    $Fobo_Form.BackgroundImageLayout = "None"
+    $Fobo_Form.Width = $Image.Width
+    $Fobo_Form.Height = $Image.Height
+    $Fobo_Form.StartPosition = "CenterScreen"
+    $Fobo_Form.Top = $true
+    $Fobo_Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
+    $Fobo_Form.Text = "Окно установки FOBO"
+    $Fobo_Form.TopMost = 'True'
+    $Fobo_Form.Icon = $Icon
+
+    
+
+    $FoboRadio = New-Object System.Windows.Forms.RadioButton
+    $FoboRadio.Location = New-Object System.Drawing.Point('10','10')
+    $FoboRadio.Text = "Одна станция"
+    $FoboRadio.BackColor = 'Transparent'
+    $FoboRadio.AutoSize = 'True'
+    $FoboRadio.Checked = 'True'
+
+    $FoboRadio1 = New-Object System.Windows.Forms.RadioButton
+    $FoboRadio1.Location = New-Object System.Drawing.Point('120','10')
+    $FoboRadio1.Text = "Пакетная установка"
+    $FoboRadio1.BackColor = 'Transparent'
+    $FoboRadio1.AutoSize = 'True'
+
+    $FoboMachine = New-Object System.Windows.Forms.TextBox
+    $FoboMachine.Location = New-Object System.Drawing.Point('10','40')
+    $FoboMachine.Size = '250,25'
+
+    $FoboMachines = New-Object System.Windows.Forms.ListBox
+    $FoboMachines.Location = New-Object System.Drawing.Point('10','40')
+    $FoboMachines.Size = '200,150'
+    $FoboMachines.Visible = 'False'
+
+#Кнопка запуска процесса одиночного выполнения.
+    $FoboProcess = New-Object System.Windows.Forms.Button
+    $FoboProcess.Location = New-Object System.Drawing.Point('10','70')
+    $FoboProcess.Size = '250,25'
+    $FoboProcess.Text = 'ПГНАЛИ'
+
+#Кнопка запуска процесса пакетного выполнения.
+    $FoboProcess1 = New-Object System.Windows.Forms.Button
+    $FoboProcess1.Location = New-Object System.Drawing.Point('215','70')
+    $FoboProcess1.Text = 'ПГНАЛИ'
+
+
+    $FoboFile = New-Object System.Windows.Forms.Button
+    $FoboFile.Location = New-Object System.Drawing.Point('215','40')
+    $FoboFile.Text = 'FILE'
+
+    $EventMachine = {
+        if($FoboRadio1.Checked)
+        {
+            $Fobo_Form.Height = $Image.Height
+            $FoboProcess1.Visible = $True
+            $FoboProcess.Visible = $False
+            $FoboFile.Visible = $True
+            $FoboMachine.Visible = $False
+            $FoboMachine.Text = ''
+            $FoboMachines.Visible = $True
+        }
+        elseif ($FoboRadio.Checked)
+        {
+            $Fobo_Form.Height = '150'
+            $FoboProcess.Visible = $True
+            $FoboProcess1.Visible = $False
+            $FoboFile.Visible = $False
+            $FoboMachines.Visible = $False
+            $FoboMachine.SelectedText = ''
+            $FoboMachine.Text = ''
+            $FoboMachine.Visible = $True
+        }
+                        
+    }
+
+
+    $EventFile = {
+                $FoboMachines.Items.Clear()
+                Add-Type -AssemblyName System.Windows.Forms
+                $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+                InitialDirectory = 'Desktop'
+                Filter = 'Text (*.txt)|*.txt|Все файлы |*.*'
+                Title = 'Выберите список машин'}
+                $FileBrowser.ShowDialog()
+                Get-Content $FileBrowser.FileName | ForEach-Object {$FoboMachines.Items.Add($_)}
+
+                }
+
+#ФУНКЦИЯ УСТАНОВКИ И ПЕРЕУСТАНОВКИ FOBO
+
+
+#Заготовка под функцию
+$eventStartDeploy={
+    
+    $Machine = $FoboMachine.Text
+    $TPath = Test-Path \\$Machine\C$\NTSwincash\config
+    $TPath2 = Test-Path \\$Machine\C$\NTSwincash\jbin
+    
+    if($FoboRadio.Checked)
+    {
+        if($Machine -eq '' -or $Machine -eq $null)
+        {
+            $O = [System.Windows.Forms.MessageBox]::Show("Машина для установки FOBO не выбрана!","Ошибка",'OK','ERROR')
+            switch($O)
+            {
+                'OK' {return}
+            }
+        }
+        elseif($Machine -ne '' -or $Machine -ne $null)
+        {
+            
+            if ($TPath -eq $False)
+            {
+                if($TPath2 -eq $True)
+                {
+                }
+                else
+                {
+                    New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin  
+                }
+                    New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
+                    $ACL = ''
+                    $FolderAcl = "\\$Machine\C`$\NTSwincash\"
+                    $ACL = Get-Acl $FolderAcl
+                    $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
+                    $ACL.SetAccessRule($AccessRule)
+                    $ACL | Set-Acl $FolderAcl
+
+                    #Копирование файлов на удаленную машину DBLINK и JBIN
+                    Copy-Item '\\$Server\C$\NTSwincash\config\*' -Filter 'dblink_*' -Destination '\\$Machine\C$\NTSwincash\config\'
+                    start xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
+                    Start-Sleep -Seconds 10       
+                    #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
+                    $PS = Test-Path C:\Windows\System32\PsExec.exe
+                        if($PS -eq $True)
+                        {
+                            psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
+                        }
+                        else
+                        {
+                            $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
+                            switch($PSEXEC)
+                            {
+                            "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
+                                  #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
+                            "NO" {return}
+                            "CANCEL" {return}
+                            }
+                            return  
+                        }
+            
+                            if(Get-Service -Name "NTSwincash distributor" -eq $True)
+                            {
+                                [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
+                                #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
+                                #start 'C:\NTSwincash\jbin\Configurator.exe'
+                            }
+                            else
+                            {
+                                [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
+                            }
+                    }
+                    elseif ($TPath -eq $True)
+                    {
+                    $Answer = [System.Windows.Forms.MessageBox]::Show("FOBO уже установлен на ПК
+Выполнить переустановку?","Ошибка",'YesNoCancel','Warning')
+                        switch($Answer)
+                        {
+                        "YES"{
+                                psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /stop
+                                Start-Sleep -Seconds 3  
+                                Remove-Item -Recurse C:\NTSwincash
+                                Start-Sleep -Seconds 3
+                                New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin
+                                New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
+                                $ACL = ''
+                                $FolderAcl = "\\$Machine\C`$\NTSwincash\"
+                                $ACL = Get-Acl $FolderAcl
+                                $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
+                                $ACL.SetAccessRule($AccessRule)
+                                $ACL | Set-Acl $FolderAcl
+
+                                #Копирование файлов на удаленную машину DBLINK и JBIN
+                                Copy-Item '\\$Server\C$\NTSwincash\config\*' -Filter 'dblink_*' -Destination '\\$Machine\C$\NTSwincash\config\'
+                                start xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
+                                Start-Sleep -Seconds 10       
+                                #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
+                                $PS = Test-Path C:\Windows\System32\PsExec.exe
+                                    if($PS -eq $True)
+                                    {
+                                        psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
+                                    }
+                                    else
+                                    {
+                                        $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
+                                        switch($PSEXEC)
+                                    {
+                                        "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
+                                        #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
+                                        "NO" {return}
+                                        "CANCEL" {return}
+                                    }
+                                    return  
+                                    }
+            
+                                    if(Get-Service -Name "NTSwincash distributor" -eq $True)
+                                    {
+                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
+                                        #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
+                                        #start 'C:\NTSwincash\jbin\Configurator.exe'
+                                    }
+                                    else
+                                    {
+                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
+                                    }
+                
+                               }
+                    "NO"{return}
+                    "CANCEL"{return}
+              }
+
+            } 
+        }
+        }
+    elseif($FoboRadio1.Checked)
+    {
+        [System.Windows.Forms.MessageBox]::Show("Над Пакетным решением ведется работа!","Ошибка",'OK','WARNING')
+         return
+    }                    
+}
+
+
+        
+               
+    $FoboProcess.add_Click($eventStartDeploy)
+    $FoboProcess1.Add_Click($eventStartDeploy)
+    $FoboFile.add_Click($EventFile)
+    $FoboRadio.add_Click($EventMachine)
+    $FoboRadio1.add_Click($EventMachine)
+    $Fobo_Form.Controls.AddRange(@($FoboRadio,$FoboRadio1,$FoboMachine,$FoboMachines,$FoboFile,$FoboProcess,$FoboProcess1))
+    $Fobo_Form.ShowDialog()
+}
+##AUTOINSTALL FOBO END
+##########################################################################################################################################################################################################
+
+##########################################################################################################################################################################################################
 #JOB MANIPULATOR START
 Function JOB_WORKER([string]$SERVER){
     $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
@@ -70,7 +332,7 @@ Function JOB_WORKER([string]$SERVER){
     $JobForm.Width = $Imagejob.Width
     $JobForm.Height = $Imagejob.Height
     $JobForm.StartPosition = "CenterScreen"
-    $JobForm.TopMost = $true
+    #$JobForm.Top = $true
     $JobForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $JobForm.Text = "Список заданий сервера - $Server"
     $JobForm.TopMost = 'True'
@@ -248,7 +510,7 @@ Function CheckServices([string]$Server)
     $CheckForm.Width = $ImageCheck.Width
     $CheckForm.Height = $ImageCheck.Height
     $CheckForm.StartPosition = "CenterScreen"
-    $CheckForm.TopMost = $true
+    $CheckForm.Top = $true
     $CheckForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $CheckForm.Text = "Монитор контроля сервисов $Server"
     $CheckForm.Icon = $Icon
@@ -518,30 +780,90 @@ Function CHECK_SETTINGS(){
 ##########################################################################################################################################################################################################
 #ReDeploy WARNIKA
 Function REDEPLOY([string]$Server){
+  
   $ChoiceD = [System.Windows.Forms.MessageBox]::Show("YES: Выполнить передеплой существующего сервиса.
 NO: Выбрать файл и выполнить передеплой.
 Cancel: Выход","Выбор действия!","YesNoCancel")
   switch($ChoiceD)
   {
     "YES" {
-            $DestinationPoint = "\\" + $Server + "\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
-            Add-Type -AssemblyName System.Windows.Forms
-            $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
-            InitialDirectory = $DestinationPoint
-            Filter = 'Deploy (*.war)|*.war|Все файлы |*.*'
-            Title = 'Выберите файл сервиса для деплоя'}
-            $FileBrowser.ShowDialog()
-            $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
-            $TST = $FileBrowser.SafeFileName
-            if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
-            Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
-            Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
-            Start-Sleep 13
-            Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item
+            if($Server -like '*int*')
+            {
+                $DestinationPoint = "\\" + $Server + "\C`$\wildfly\wildfly10\standalone\deployments\"
 
+            #Вызов диалога выбора файла с заданными параметрами
+                Add-Type -AssemblyName System.Windows.Forms
+                $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+                InitialDirectory = $DestinationPoint
+                Filter = 'Deploy (*.war)|*.war;*.failed|Все файлы |*.*'
+                Title = 'Выберите файл сервиса для деплоя'}
+                $FileBrowser.ShowDialog()
+
+            #Формирование имени файла.
+                $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
+                $TST = $FileBrowser.SafeFileName
+
+            #Отработка тестов выбора файла и его наличия.
+                if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
+
+            #Открытие директории и начало выполнения передеплоя файла.
+                Invoke-Item $DestinationPoint
+                Get-ChildItem -Path  "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.failed" | Remove-Item
+                $DeployedServiceName = "$DestinationFileName.deployed"
+                $DeployedServiceName = $DeployedServiceName -replace '\s',''
+                Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
+                Start-Sleep 13
+                Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
+                Rename-Item "$DestinationFileName.undeployed" -NewName "$DestinationFileName.dodeploy"
+                Start-Sleep 5
+                if(Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying")
+                {
+                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно")
+                }
+                else
+                {
+                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!")
+                }
+            }
+
+            else
+            {
+            #Формирование пути к серверу и файлу.
+                $DestinationPoint = "\\" + $Server + "\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+            #Вызов диалога выбора файла с заданными параметрами
+                Add-Type -AssemblyName System.Windows.Forms
+                $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+                InitialDirectory = $DestinationPoint
+                Filter = 'Deploy (*.war)|*.war;*.failed|Все файлы |*.*'
+                Title = 'Выберите файл сервиса для деплоя'}
+                $FileBrowser.ShowDialog()
+
+            #Формирование имени файла.
+                $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
+                $TST = $FileBrowser.SafeFileName
+                if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
+            #Выполнение передеплоя  
+                Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+                Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
+                Start-Sleep 13
+                Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item
+                Start-Sleep 3
+                if(Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying")
+                {
+                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно")
+                }
+                else
+                {
+                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!")
+                }
+
+            }
+            
     
     }
     "NO"{
+            if($Server -like '*int*')
+            { [System.Windows.Forms.MessageBox]::Show("Данная функция для Интерфейсных серверов в Разработке!","В РАЗРАБОТКЕ",'OK','ERROR');return}
             Add-Type -AssemblyName System.Windows.Forms
             $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
             Filter = 'Deploy (*.war)|*.war|Все файлы |*.*'
@@ -549,13 +871,16 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
             $FileBrowser.ShowDialog()
 
             $DestinationPoint = "\\" + $Server + "\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+
             $PathTest = Test-Path $DestinationPoint
-            #$DestinationPoint = 'C:\1\deployments\'
+
+            
             $DestinationFileName = $DestinationPoint + $FileBrowser.SafeFileName
             $TST = $FileBrowser.SafeFileName
             if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
             $FileTestName = $FileBrowser.SafeFileName -split ".war"
             $ProvFile = [System.Windows.Forms.MessageBox]::Show("Будет выполнен деплой файла " + $TST+ ". На сервер :" + $Server,"Путь деплоя","OKCancel",'Info')
+
             switch($ProvFile)
             {
              "Cancel"{[System.Windows.Forms.MessageBox]::Show("Отмена Деплоя!");return}
@@ -577,6 +902,7 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
             elseif($PathTest -eq $True -and $FileTest -eq $True)
             {
 
+                Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
                 Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
                 Rename-Item $DestinationFileName -NewName "$DestinationFileName.backup"
                 Copy-Item -Path $FileBrowser.FileName -Destination $DestinationFileName
@@ -586,7 +912,9 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 $Hash2 = Get-FileHash $DestinationFileName
 
                 if ($Hash1.Hash -eq $Hash2.Hash -and $Hash1.Hash -ne $NULL -and $Hash2.Hash -ne $NULL)
-                    {[System.Windows.MessageBox]::Show("Файл успешно перенесен $DestinationFileName","Перенос файла успешен")}
+                    {
+                    [System.Windows.MessageBox]::Show("Файл успешно перенесен $DestinationFileName","Перенос файла успешен")
+                    }
                     else
                     {
                     $CHECKHASH = [System.Windows.MessageBox]::Show("Файл перенесен в $DestinationFileName с ошибками
@@ -595,13 +923,16 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                     "OK"{
                     Rename-Item $DestinationFileName -NewName "$DestinationFileName.backup.FAILED"
                     Rename-Item "$DestinationFileName.backup" -NewName "$DestinationFileName"}
-                        }
+                    }
         
             }
          }
-         Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
+         #Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
     }
-    "CANCEL"{return}
+
+    "CANCEL"{
+    return}
+
 
   }
 
@@ -721,7 +1052,7 @@ $ReleaseForm.BackgroundImageLayout = "None"
 $ReleaseForm.Size = New-Object System.Drawing.Size(150,165)
 $ReleaseForm
 $ReleaseForm.StartPosition = "CenterScreen"
-$ReleaseForm.TopMost = $true
+$ReleaseForm.Top = $true
 $ReleaseForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedToolWindow
 $ReleaseForm.Text = "ВЫБЕРИТЕ РЕЛИЗ"
 $ReleaseForm.Icon  = $Icon
@@ -817,7 +1148,7 @@ $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
 $objForm.SizeGripStyle = "Hide"
 $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
-$objForm.Text = "Программа для безумного управления сервисами"
+$objForm.Text = "Программа для безумного управления сервисами V1.2"
 $objForm.StartPosition = "CenterScreen"
 $objForm.Height = '370'
 $objForm.Width = $Image.Width
@@ -1071,6 +1402,32 @@ $JobButton.add_Click({
 })
 
 
+#FOBO INSTALL
+$FoboButton = New-Object System.Windows.Forms.Button
+$FoboButton.Location = New-Object System.Drawing.Size(230,300)
+$FoboButton.Size = New-Object System.Drawing.Size(120,23)
+$FoboButton.Font = $Font
+$FoboButton.Text = "Fobo_Install (Beta)"
+
+$FoboButton.Add_Click({
+
+    $Answer = CHECK_SETTINGS
+        switch($Answer){
+        "YES"{ 
+               if($Server -like '*int*' -or $Server -like '*ajb*')
+               { [System.Windows.Forms.MessageBox]::Show("Для интерфейсных и центральных серверов процесс установки недоступен!")
+                 return
+               }
+               else{
+               FOBO_INSTALL($Server)
+               $Server = ''
+               }
+             }
+        "NO"{ return }
+        }    
+        
+
+})
 
 # Cancel EXIT Button
 $CancelButton = New-Object System.Windows.Forms.Button
@@ -1084,6 +1441,7 @@ $CancelButton.Add_Click({$objForm.Close()})
 
 
 #ADD TO FORM
+$objForm.Controls.Add($FoboButton)
 $objForm.Controls.Add($CancelButton)
 $objForm.Controls.Add($JobButton)
 $objForm.Controls.Add($RestartButton)
@@ -1102,6 +1460,7 @@ $objForm.ShowDialog()
 #EXECUTION MAIN PROGRAMM
 Hide-Console
 GENERATOR
+$SERVER = ''
 ##########################################################################################################################################################################################################
 
 
