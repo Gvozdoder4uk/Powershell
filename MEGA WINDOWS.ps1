@@ -59,10 +59,150 @@ function Hide-Console
 ##########################################################################################################################################################################################################
 #AUTOINSTALL FOBO START
 #
-Function DEPLOYFOBO([string]$Machine,[string]$Server){
-     
-}
+Function DEPLOYFOBO([string]$Machine, [string]$Server){
+            $TPath = Test-Path \\$Machine\C$\NTSwincash\config
+            $TPath2 = Test-Path \\$Machine\C$\NTSwincash\jbin
+            $Global:FoboStatus.Text = 'Выполняются проверки. Ожидайте'
+            Start-Sleep -Seconds 2
+            if ($TPath -eq $False)
+            {
+                if($TPath2 -eq $True)
+                {
+                }
+                else
+                {
+                    New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin  
+                }
+                    $Global:FoboStatus.Text = 'Проверки пройдены! Переход к копированию!'
+                    Start-Sleep -Seconds 2
+                    New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
+                    $ACL = ''
+                    $FolderAcl = "\\$Machine\C`$\NTSwincash\"
+                    $ACL = Get-Acl $FolderAcl
+                    $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
+                    $ACL.SetAccessRule($AccessRule)
+                    $ACL | Set-Acl $FolderAcl
 
+                    #Копирование файлов на удаленную машину DBLINK и JBIN
+                    $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
+                    Start-Sleep -Seconds 2
+                    Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
+                    $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
+                    Start-Sleep -Seconds 2
+                    xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
+                    $Global:FoboStatus.Text = 'Копирование Завершено!'
+                    Start-Sleep -Seconds 2       
+                    #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
+                    $Global:FoboStatus.Text = 'Выполняется установка службы!'
+                    $PS = Test-Path C:\Windows\System32\PsExec.exe
+                        if($PS -eq $True)
+                        {
+                            psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
+                        }
+                        else
+                        {
+                            $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
+                            switch($PSEXEC)
+                            {
+                            "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
+                                  #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
+                            "NO" {return}
+                            "CANCEL" {return}
+                            }
+                            return  
+                        }
+            
+                            if(Get-Service -Name "NTSwincash distributor")
+                            {
+                                $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
+                                №[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
+                                #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
+                                #start 'C:\NTSwincash\jbin\Configurator.exe'
+                                (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+
+                            }
+                            else
+                            {
+                                [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
+                                (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*r.exe'").terminate() | Out-Null
+                            }
+                            }
+                elseif ($TPath -eq $True)
+                {
+                    $Answer = [System.Windows.Forms.MessageBox]::Show("FOBO уже установлен на ПК
+Выполнить переустановку?","Ошибка",'YesNoCancel','Warning')
+                    switch($Answer)
+                    {
+                        "YES"{
+                                psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /stop
+                                start-sleep -seconds 2
+                                (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+                                $Global:FoboStatus.Text = 'Выполняется удаление старой папки! Ожидайте!'
+                                Start-Sleep -Seconds 2 
+                                Remove-Item -Path \\$machine\C$\NTSwincash -Recurse -ErrorAction SilentlyContinue | Out-Null
+                                Start-Sleep -Seconds 20
+                                New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin
+                                New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
+                                $ACL = ''
+                                $FolderAcl = "\\$Machine\C`$\NTSwincash\"
+                                $ACL = Get-Acl $FolderAcl
+                                $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
+                                $ACL.SetAccessRule($AccessRule)
+                                $ACL | Set-Acl $FolderAcl
+
+                                #Копирование файлов на удаленную машину DBLINK и JBIN
+                                $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
+                                Start-Sleep -Seconds 2
+                                Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
+                                $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
+                                Start-Sleep -Seconds 2
+                                xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
+                                $Global:FoboStatus.Text = 'Копирование Завершено!'
+                                Start-Sleep -Seconds 2       
+                                #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
+                                $Global:FoboStatus.Text = 'Выполняется установка службы!'
+                                $PS = Test-Path C:\Windows\System32\PsExec.exe
+                                    if($PS -eq $True)
+                                    {
+                                        psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
+                                    }
+                                    else
+                                    {
+                                        $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
+                                        switch($PSEXEC)
+                                    {
+                                        "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
+                                        #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
+                                        "NO" {return}
+                                        "CANCEL" {return}
+                                    }
+                                    return  
+                                    }
+            
+                                    if(Get-Service -Name "NTSwincash distributor")
+                                    {
+                                        $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
+                                        $Global:FoboStatus.ForeColor = 'Green'
+                                        #[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
+                                        #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
+                                        #start 'C:\NTSwincash\jbin\Configurator.exe'
+                                        (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+                                    }
+                                    else
+                                    {
+                                        $Global:FoboStatus.Text = 'Ошибка установки службы!'
+                                        $Global:FoboStatus.ForeColor = 'RED'
+                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
+                                        (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+                                    }
+                
+                               }
+                    "NO"{return}
+                    "CANCEL"{return}
+              }
+
+            }      
+    }
 Function FOBO_INSTALL([string]$Server)
 {
     $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
@@ -83,7 +223,13 @@ Function FOBO_INSTALL([string]$Server)
     $Fobo_Form.TopMost = 'True'
     $Fobo_Form.Icon = $Icon
 
-    
+    $Global:FoboStatus = New-Object System.Windows.Forms.Label
+    $Global:FoboStatus.Location = New-Object System.Drawing.Point('10','97')
+    $Global:FoboStatus.Text = 'ЗДЕСЬ БУДЕТ СТАТУС ВЫПОЛНЕНИЯ РАБОТЫ!'
+    $Global:FoboStatus.AutoSize = $True
+    #$Global:FoboStatus.BackColor = 'Transparent'
+    $Global:FoboStatus.ForeColor = 'Blue'
+
 
     $FoboRadio = New-Object System.Windows.Forms.RadioButton
     $FoboRadio.Location = New-Object System.Drawing.Point('10','10')
@@ -126,7 +272,9 @@ Function FOBO_INSTALL([string]$Server)
     $EventMachine = {
         if($FoboRadio1.Checked)
         {
+            $FoboStatus.Visible = $False
             $Fobo_Form.Height = $Image.Height
+            $Fobo_Form.Width = $Image.Width
             $FoboProcess1.Visible = $True
             $FoboProcess.Visible = $False
             $FoboFile.Visible = $True
@@ -136,6 +284,8 @@ Function FOBO_INSTALL([string]$Server)
         }
         elseif ($FoboRadio.Checked)
         {
+            $Fobo_Form.Width = '300'
+            $FoboStatus.Visible = $True
             $Fobo_Form.Height = '150'
             $FoboProcess.Visible = $True
             $FoboProcess1.Visible = $False
@@ -165,13 +315,10 @@ Function FOBO_INSTALL([string]$Server)
 
 
 #Заготовка под функцию
-$eventStartDeploy={
-    
+$eventStartDeploy = {
     $Machine = $FoboMachine.Text
-    $TPath = Test-Path \\$Machine\C$\NTSwincash\config
-    $TPath2 = Test-Path \\$Machine\C$\NTSwincash\jbin
     
-    if($FoboRadio.Checked)
+    IF($FoboRadio.Checked)
     {
         if($Machine -eq '' -or $Machine -eq $null)
         {
@@ -183,125 +330,18 @@ $eventStartDeploy={
         }
         elseif($Machine -ne '' -or $Machine -ne $null)
         {
-            
-            if ($TPath -eq $False)
-            {
-                if($TPath2 -eq $True)
-                {
-                }
-                else
-                {
-                    New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin  
-                }
-                    New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
-                    $ACL = ''
-                    $FolderAcl = "\\$Machine\C`$\NTSwincash\"
-                    $ACL = Get-Acl $FolderAcl
-                    $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
-                    $ACL.SetAccessRule($AccessRule)
-                    $ACL | Set-Acl $FolderAcl
-
-                    #Копирование файлов на удаленную машину DBLINK и JBIN
-                    Copy-Item '\\$Server\C$\NTSwincash\config\*' -Filter 'dblink_*' -Destination '\\$Machine\C$\NTSwincash\config\'
-                    start xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
-                    Start-Sleep -Seconds 10       
-                    #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
-                    $PS = Test-Path C:\Windows\System32\PsExec.exe
-                        if($PS -eq $True)
-                        {
-                            psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
-                        }
-                        else
-                        {
-                            $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
-                            switch($PSEXEC)
-                            {
-                            "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
-                                  #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
-                            "NO" {return}
-                            "CANCEL" {return}
-                            }
-                            return  
-                        }
-            
-                            if(Get-Service -Name "NTSwincash distributor" -eq $True)
-                            {
-                                [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
-                                #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
-                                #start 'C:\NTSwincash\jbin\Configurator.exe'
-                            }
-                            else
-                            {
-                                [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
-                            }
-                    }
-                    elseif ($TPath -eq $True)
-                    {
-                    $Answer = [System.Windows.Forms.MessageBox]::Show("FOBO уже установлен на ПК
-Выполнить переустановку?","Ошибка",'YesNoCancel','Warning')
-                        switch($Answer)
-                        {
-                        "YES"{
-                                psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /stop
-                                Start-Sleep -Seconds 3  
-                                Remove-Item -Recurse C:\NTSwincash
-                                Start-Sleep -Seconds 3
-                                New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin
-                                New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
-                                $ACL = ''
-                                $FolderAcl = "\\$Machine\C`$\NTSwincash\"
-                                $ACL = Get-Acl $FolderAcl
-                                $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
-                                $ACL.SetAccessRule($AccessRule)
-                                $ACL | Set-Acl $FolderAcl
-
-                                #Копирование файлов на удаленную машину DBLINK и JBIN
-                                Copy-Item '\\$Server\C$\NTSwincash\config\*' -Filter 'dblink_*' -Destination '\\$Machine\C$\NTSwincash\config\'
-                                start xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
-                                Start-Sleep -Seconds 10       
-                                #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
-                                $PS = Test-Path C:\Windows\System32\PsExec.exe
-                                    if($PS -eq $True)
-                                    {
-                                        psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
-                                    }
-                                    else
-                                    {
-                                        $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
-                                        switch($PSEXEC)
-                                    {
-                                        "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
-                                        #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
-                                        "NO" {return}
-                                        "CANCEL" {return}
-                                    }
-                                    return  
-                                    }
-            
-                                    if(Get-Service -Name "NTSwincash distributor" -eq $True)
-                                    {
-                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
-                                        #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
-                                        #start 'C:\NTSwincash\jbin\Configurator.exe'
-                                    }
-                                    else
-                                    {
-                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
-                                    }
-                
-                               }
-                    "NO"{return}
-                    "CANCEL"{return}
-              }
-
-            } 
+            DEPLOYFOBO $Machine $Server
         }
-        }
+    
+    }
     elseif($FoboRadio1.Checked)
     {
         [System.Windows.Forms.MessageBox]::Show("Над Пакетным решением ведется работа!","Ошибка",'OK','WARNING')
          return
-    }                    
+    }
+
+
+                    
 }
 
 
@@ -312,7 +352,7 @@ $eventStartDeploy={
     $FoboFile.add_Click($EventFile)
     $FoboRadio.add_Click($EventMachine)
     $FoboRadio1.add_Click($EventMachine)
-    $Fobo_Form.Controls.AddRange(@($FoboRadio,$FoboRadio1,$FoboMachine,$FoboMachines,$FoboFile,$FoboProcess,$FoboProcess1))
+    $Fobo_Form.Controls.AddRange(@($FoboRadio,$FoboRadio1,$FoboMachine,$FoboMachines,$FoboFile,$FoboProcess,$FoboProcess1,$FoboStatus))
     $Fobo_Form.ShowDialog()
 }
 ##AUTOINSTALL FOBO END
@@ -1049,7 +1089,7 @@ $ReleaseForm = New-Object System.Windows.Forms.Form
 $ReleaseForm.SizeGripStyle = "Hide"
 $ReleaseForm.BackgroundImage = $ImageRelease
 $ReleaseForm.BackgroundImageLayout = "None"
-$ReleaseForm.Size = New-Object System.Drawing.Size(150,165)
+$ReleaseForm.Size = New-Object System.Drawing.Size(150,170)
 $ReleaseForm
 $ReleaseForm.StartPosition = "CenterScreen"
 $ReleaseForm.Top = $true
@@ -1122,8 +1162,13 @@ $ReleaseForm.ShowDialog()
 }
 #RELEASE CHOICE FUNCTION END
 ##########################################################################################################################################################################################################
-
-
+#
+#START CLEAR TEMPOROS
+Function CLEAR_TEMP([string]$Server){
+    Get-ChildItem "\\$Server\C$\Windows\Temp\*" | Remove-Item -ErrorAction SilentlyContinue -Force -Recurse
+}
+#END CLEAR TEMPOROS
+#
 ##########################################################################################################################################################################################################
 ##########################################################################################################################################################################################################
 #MAIN FUNCTION FOR ALL PROGRAMM
@@ -1429,6 +1474,73 @@ $FoboButton.Add_Click({
 
 })
 
+#Кнопка очистки Темп файлов на Магазина WIP!
+$TEMPBTN = New-Object System.Windows.Forms.Button
+$TEMPBTN.Location = New-Object System.Drawing.Size(395,185)
+$TEMPBTN.Size = New-Object System.Drawing.Size(120,23)
+$TEMPBTN.Font = $Font
+$TEMPBTN.Text = "CLEAR TEMP"
+
+$TEMPBTN.add_Click({
+    $Answer = CHECK_SETTINGS
+        switch($Answer){
+        "YES"{ 
+               if($Server -like '*int*' -or $Server -like '*ajb*')
+               { [System.Windows.Forms.MessageBox]::Show("Для интерфейсных и центральных серверов процесс удаления недоступен!")
+                 return
+               }
+               else{
+                 CLEAR_TEMP($Server)
+               }
+             }
+        "NO"{ return }
+        }    
+})
+
+
+#Кнопка открыть шару сервера.
+$OpenFLDR
+$OpenFLDR = New-Object System.Windows.Forms.Button
+$OpenFLDR.Location = New-Object System.Drawing.Size(395,215)
+$OpenFLDR.Size = New-Object System.Drawing.Size(120,23)
+$OpenFLDR.Font = $Font
+$OpenFLDR.Text = "OPEN FOLDER"
+
+$OpenFLDR.add_Click({
+    $Answer = CHECK_SETTINGS
+        switch($Answer){
+        "YES"{ 
+               if($Server -like '*int*' -or $Server -like '*ajb*')
+               { [System.Windows.Forms.MessageBox]::Show("Для интерфейсных и центральных серверов процесс удаления недоступен!")
+                 return
+               }
+               else{
+                 Invoke-Item "\\$Server\C$\"
+                 #Invoke-Item "\\$Server\C`$\NTSwincash\jboss\"
+               }
+             }
+        "NO"{ return }
+        } 
+    
+})
+
+$OpenFLDR.KeyPreview = $True
+$OpenFLDR.Add_KeyDown({
+    if ($_.KeyCode -eq "d" -or $_.KeyCode -eq "D") 
+    {
+        Invoke-Item "\\$Server\C`$\NTSwincash\jboss\"
+    }
+    elseif($_.KeyCode -eq "L" -or "l")
+    {
+     Invoke-Item "\\$Server\C`$\NTSwincash\jboss\"
+    }
+})
+
+
+
+
+
+
 # Cancel EXIT Button
 $CancelButton = New-Object System.Windows.Forms.Button
 $CancelButton.Location = New-Object System.Drawing.Size(440,300)
@@ -1441,6 +1553,8 @@ $CancelButton.Add_Click({$objForm.Close()})
 
 
 #ADD TO FORM
+$objForm.Controls.Add($OpenFLDR)
+$objForm.Controls.Add($TEMPBTN)
 $objForm.Controls.Add($FoboButton)
 $objForm.Controls.Add($CancelButton)
 $objForm.Controls.Add($JobButton)
