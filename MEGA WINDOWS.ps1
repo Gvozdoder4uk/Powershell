@@ -1,7 +1,7 @@
 ﻿##[Ps1 To Exe]
 ##
 ##Kd3HDZOFADWE8uO1
-##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBnwarVaQFd49g==
+##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBn/Zrg7CX1UuWf1B0Td
 ##Kd3HFJGZHWLWoLaVvnQnhQ==
 ##LM/RF4eFHHGZ7/K1
 ##K8rLFtDXTiW5
@@ -217,14 +217,14 @@ Function FOBO_INSTALL([string]$Server)
     $Fobo_Form.Width = $Image.Width
     $Fobo_Form.Height = $Image.Height
     $Fobo_Form.StartPosition = "CenterScreen"
-    $Fobo_Form.Top = $true
+    $Fobo_Form.TopMost = $true
     $Fobo_Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $Fobo_Form.Text = "Окно установки FOBO"
-    $Fobo_Form.TopMost = 'True'
+    $Fobo_Form.TopMost = $True
     $Fobo_Form.Icon = $Icon
 
     $Global:FoboStatus = New-Object System.Windows.Forms.Label
-    $Global:FoboStatus.Location = New-Object System.Drawing.Point('10','97')
+    $Global:FoboStatus.Location = New-Object System.Drawing.Point('10','93')
     $Global:FoboStatus.Text = 'ЗДЕСЬ БУДЕТ СТАТУС ВЫПОЛНЕНИЯ РАБОТЫ!'
     $Global:FoboStatus.AutoSize = $True
     #$Global:FoboStatus.BackColor = 'Transparent'
@@ -375,7 +375,7 @@ Function JOB_WORKER([string]$SERVER){
     #$JobForm.Top = $true
     $JobForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $JobForm.Text = "Список заданий сервера - $Server"
-    $JobForm.TopMost = 'True'
+    $JobForm.TopMost = $True
     $JobForm.Icon = $Icon
 
     $JobForm.KeyPreview = $True
@@ -482,7 +482,6 @@ Function JOB_WORKER([string]$SERVER){
     $JobProcessButton = New-Object  System.Windows.Forms.Button
     $JobProcessButton.Location = New-Object System.Drawing.Size(217,170)
     $JobProcessButton.Text = "Process"
-
     $JobProcessButton.add_Click({
               
               if($JobStart.Checked){
@@ -550,7 +549,7 @@ Function CheckServices([string]$Server)
     $CheckForm.Width = $ImageCheck.Width
     $CheckForm.Height = $ImageCheck.Height
     $CheckForm.StartPosition = "CenterScreen"
-    $CheckForm.Top = $true
+    $CheckForm.TopMost = $True
     $CheckForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $CheckForm.Text = "Монитор контроля сервисов $Server"
     $CheckForm.Icon = $Icon
@@ -814,6 +813,58 @@ Function CHECK_SETTINGS(){
     }
 
  return $Answer
+}
+##########################################################################################################################################################################################################
+Function CHECK_SETTINGS_NO_WINDOW(){
+    #Проверка Среды
+    if($RadioVRX.Checked)
+    {
+      $SRED = 'vrx'  
+    }
+    elseif ($RadioVRQ.Checked)
+    {
+      $SRED = 'vrq'
+    }
+    else
+    {
+     [System.Windows.Forms.MessageBox]::Show("НЕ ВЫБРАН КОНТУР!","ВЫБЕРИТЕ КОНТУР",'OK','ERROR')
+     return
+    }
+
+    #Проверка контура
+    if ($RadioContur.Checked)
+    {
+     #[System.Windows.Forms.MessageBox]::Show("ajb","Контур",'OK','Info')
+     $CONT = "ajb"
+     $MACHINE = $Combo_Srez.SelectedItem
+    }
+    elseif ($RadioMAG.Checked)
+    {
+     #[System.Windows.Forms.MessageBox]::Show("a","МАГАЗИН")
+     $CONT = "a"
+     $MACHINE = $TextBox.Text
+    }
+    elseif ($RadioINT.Checked = $true)
+    {
+     #[System.Windows.Forms.MessageBox]::Show("int","ИНТЕРФЕЙС")
+     $CONT = "int"
+     $MACHINE = $Combo_Srez.SelectedItem
+    }
+
+
+
+    #Проверка ввода.
+    if($MACHINE -eq 'Введите магазин' -or $Machine -eq '')
+    {
+      [System.Windows.Forms.MessageBox]::Show('Обнаружена ошибка выбора станции. Повторите ввод!',"Ошибка выбора",'RetryCancel','ERROR')
+      return
+    }
+    else
+    {
+     $Global:SERVER = 'fobo-'+ $SRED + "-" + $CONT + $MACHINE
+    }
+
+ return $SERVER
 }
 ##########################################################################################################################################################################################################
 
@@ -1092,7 +1143,7 @@ $ReleaseForm.BackgroundImageLayout = "None"
 $ReleaseForm.Size = New-Object System.Drawing.Size(150,170)
 $ReleaseForm
 $ReleaseForm.StartPosition = "CenterScreen"
-$ReleaseForm.Top = $true
+$ReleaseForm.TopMost = $True
 $ReleaseForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedToolWindow
 $ReleaseForm.Text = "ВЫБЕРИТЕ РЕЛИЗ"
 $ReleaseForm.Icon  = $Icon
@@ -1164,7 +1215,7 @@ $ReleaseForm.ShowDialog()
 ##########################################################################################################################################################################################################
 #
 #START CLEAR TEMPOROS
-Function CLEAR_TEMP([string]$Server){
+Workflow CLEAR_TEMP([string]$Server){
     Get-ChildItem "\\$Server\C$\Windows\Temp\*" | Remove-Item -ErrorAction SilentlyContinue -Force -Recurse
 }
 #END CLEAR TEMPOROS
@@ -1456,20 +1507,20 @@ $FoboButton.Text = "Fobo_Install (Beta)"
 
 $FoboButton.Add_Click({
 
-    $Answer = CHECK_SETTINGS
-        switch($Answer){
-        "YES"{ 
+    $Server = CHECK_SETTINGS_NO_WINDOW
                if($Server -like '*int*' -or $Server -like '*ajb*')
-               { [System.Windows.Forms.MessageBox]::Show("Для интерфейсных и центральных серверов процесс установки недоступен!")
+               { [System.Windows.Forms.MessageBox]::Show("Нельзя использовать в качестве коннекторов сервера типа INT и AJB")
                  return
                }
                else{
-               FOBO_INSTALL($Server)
-               $Server = ''
+               $DBLINKS = [System.Windows.Forms.MessageBox]::Show("Будут использованы DBLINKS сервера: " + $Server,'DBLINKS','YesNo','INFO')
+               switch($DBLINKS)
+               {
+                "NO"{return}
+                "YES"{ FOBO_INSTALL($Server)
+               $Server = ''}
                }
-             }
-        "NO"{ return }
-        }    
+               }  
         
 
 })
@@ -1482,24 +1533,20 @@ $TEMPBTN.Font = $Font
 $TEMPBTN.Text = "CLEAR TEMP"
 
 $TEMPBTN.add_Click({
-    $Answer = CHECK_SETTINGS
-        switch($Answer){
-        "YES"{ 
-               if($Server -like '*int*' -or $Server -like '*ajb*')
-               { [System.Windows.Forms.MessageBox]::Show("Для интерфейсных и центральных серверов процесс удаления недоступен!")
-                 return
-               }
-               else{
-                 CLEAR_TEMP($Server)
-               }
-             }
-        "NO"{ return }
-        }    
+    $Server = CHECK_SETTINGS_NO_WINDOW
+    if($Server -like "fobo*")
+    {
+      CLEAR_TEMP($Server)
+    }
+    else
+    {
+      return
+    }
+
 })
 
 
 #Кнопка открыть шару сервера.
-$OpenFLDR
 $OpenFLDR = New-Object System.Windows.Forms.Button
 $OpenFLDR.Location = New-Object System.Drawing.Size(395,215)
 $OpenFLDR.Size = New-Object System.Drawing.Size(120,23)
@@ -1507,39 +1554,17 @@ $OpenFLDR.Font = $Font
 $OpenFLDR.Text = "OPEN FOLDER"
 
 $OpenFLDR.add_Click({
-    $Answer = CHECK_SETTINGS
-        switch($Answer){
-        "YES"{ 
-               if($Server -like '*int*' -or $Server -like '*ajb*')
-               { [System.Windows.Forms.MessageBox]::Show("Для интерфейсных и центральных серверов процесс удаления недоступен!")
-                 return
-               }
-               else{
-                 Invoke-Item "\\$Server\C$\"
-                 #Invoke-Item "\\$Server\C`$\NTSwincash\jboss\"
-               }
-             }
-        "NO"{ return }
-        } 
+    $Server = CHECK_SETTINGS_NO_WINDOW
+        if($Server -like "fobo*")
+        {
+        Invoke-Item "\\$Server\C$\"
+        }
+        else
+        {
+            return
+        }
     
 })
-
-$OpenFLDR.KeyPreview = $True
-$OpenFLDR.Add_KeyDown({
-    if ($_.KeyCode -eq "d" -or $_.KeyCode -eq "D") 
-    {
-        Invoke-Item "\\$Server\C`$\NTSwincash\jboss\"
-    }
-    elseif($_.KeyCode -eq "L" -or "l")
-    {
-     Invoke-Item "\\$Server\C`$\NTSwincash\jboss\"
-    }
-})
-
-
-
-
-
 
 # Cancel EXIT Button
 $CancelButton = New-Object System.Windows.Forms.Button

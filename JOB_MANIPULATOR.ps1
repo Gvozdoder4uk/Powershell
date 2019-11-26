@@ -1,4 +1,4 @@
-﻿##[Ps1 To Exe]
+##[Ps1 To Exe]
 ##
 ##Kd3HDZOFADWE8uO1
 ##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBn6RogaRFV5giH5V1m5FMEDQPQHscEdUAVnGuYC7rvEEuK6CLYLgehsJeyNqdI=
