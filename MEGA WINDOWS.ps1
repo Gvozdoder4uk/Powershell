@@ -34,6 +34,7 @@
 
 #GLOBAL VARIABLE
 $Global:RLS=''
+
 # .Net methods for hiding/showing the console
 Add-Type -Name Window -Namespace Console -MemberDefinition '
 [DllImport("Kernel32.dll")]
@@ -45,6 +46,7 @@ public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 
 function Show-Console
 {
+    # 4 SHOW
     $consolePtr = [Console.Window]::GetConsoleWindow()
     [Console.Window]::ShowWindow($consolePtr, 4)
 }
@@ -115,7 +117,7 @@ Function DEPLOYFOBO([string]$Machine, [string]$Server){
                             if(Get-Service -Name "NTSwincash distributor")
                             {
                                 $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
-                                №[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
+                                #[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
                                 #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
                                 #start 'C:\NTSwincash\jbin\Configurator.exe'
                                 (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
@@ -214,8 +216,15 @@ Function FOBO_INSTALL([string]$Server)
     $Fobo_Form.SizeGripStyle = "Hide"
     $Fobo_Form.BackgroundImage = $Image
     $Fobo_Form.BackgroundImageLayout = "None"
+    if($Image -eq $null)
+    {
+    $Fobo_Form.Size = ('350,247')
+    }
+    else{
     $Fobo_Form.Width = $Image.Width
     $Fobo_Form.Height = $Image.Height
+    }
+    
     $Fobo_Form.StartPosition = "CenterScreen"
     $Fobo_Form.TopMost = $true
     $Fobo_Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
@@ -362,15 +371,21 @@ $eventStartDeploy = {
 #JOB MANIPULATOR START
 Function JOB_WORKER([string]$SERVER){
     $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
-    $FontJob = New-Object System.Drawing.Font("Colibri",9,[System.Drawing.FontStyle]::Bold)
+    $FontJob = New-Object System.Drawing.Font("Comic Sans MS",9,[System.Drawing.FontStyle]::Bold)
     $Imagejob =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\Worker2.jpg")
     #Create JOB Form
     $JobForm = New-Object System.Windows.Forms.Form
     $JobForm.SizeGripStyle = "Hide"
     $JobForm.BackgroundImage = $Imagejob
     $JobForm.BackgroundImageLayout = "None"
+    if($Imagejob -eq $Null)
+    {
+     $JobForm.Size = ('500,313')
+    }
+    else{
     $JobForm.Width = $Imagejob.Width
     $JobForm.Height = $Imagejob.Height
+    }
     $JobForm.StartPosition = "CenterScreen"
     #$JobForm.Top = $true
     $JobForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
@@ -387,10 +402,51 @@ Function JOB_WORKER([string]$SERVER){
 
     
     
-    if($Server -like '*vrq*')
-    {[System.Windows.Forms.MessageBox]::Show("Для VRQ среды пока беда!","VRQ")
-     return
-        }
+    if($Server -like '*vrq-int*')
+    {#[System.Windows.Forms.MessageBox]::Show("Для VRQ среды пока беда!","VRQ")
+     #$JOBS_OF_SERVER = Get-ScheduledTask - $Server | Select-Object TaskName "FOBO*"
+     $Schedule = New-Object -ComObject "Schedule.Service"
+     $Schedule.Connect($Server)
+     $JOB_OF_SERVER = $Schedule.GetFolder('\')
+     $JOB_OF_SERVICE = $JOB_OF_SERVER.GetTasks(1) |  Select @{ Name = 'Name'
+     Expression = {if($_.Name -like '*FOBO*')
+     {$_.Name}
+     else{}}
+     },
+     @{
+      Name = 'State'
+      Expression = {switch ($_.State) {
+            0 {'Unknown'}
+            1 {'Disabled'}
+            2 {'Queued'}
+            3 {'Ready'}
+            4 {'Running'}
+          }
+       }
+     }
+    }
+    elseif($Server -like '*vrq-a*')
+    {
+     $Schedule = New-Object -ComObject "Schedule.Service"
+     $Schedule.Connect($Server)
+     $JOB_OF_SERVER = $Schedule.GetFolder('\NTSwincash')
+     $JOB_OF_SERVICE = $JOB_OF_SERVER.GetTasks(1) |  Select @{ Name = 'Name'
+     Expression = {if($_.Name -like '*JOB*')
+     {$_.Name}
+     else{}}
+     },
+     @{
+      Name = 'State'
+      Expression = {switch ($_.State) {
+            0 {'Unknown'}
+            1 {'Disabled'}
+            2 {'Queued'}
+            3 {'Ready'}
+            4 {'Running'}
+          }
+       }
+     }
+    }
     elseif($Server -like '*ajb*')
     {[System.Windows.Forms.MessageBox]::Show("Для серверов центра работа сервиса не предусмотрена!","Контуры")
      return
@@ -409,9 +465,16 @@ Function JOB_WORKER([string]$SERVER){
     $JobList.Location = New-Object System.Drawing.Size(5,10)
     $JobList.Size = '200,260'
     $JobList.ScrollAlwaysVisible = 'False'
+    #$JobList.Font = $FontJob
     $JobList.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+    if($Server -like '*vrq*')
+    {
+    $JobList.DataSource = $JOB_OF_SERVICE.Name
+    }
+    else
+    {
     $JobList.DataSource = $JOBS_OF_SERVER.TaskName
-
+    }
 #Label Status
     $JobLabel = New-Object System.Windows.Forms.Label
     $JobLabel.Location = New-Object System.Drawing.Size(210,10)
@@ -431,8 +494,15 @@ Function JOB_WORKER([string]$SERVER){
     $JobStatus.Text = '  Состояние задачи'
 
     $JL_SELECT ={
-       $JB = $JobList.SelectedItem 
+       $JB = $JobList.SelectedItem
+       if($Server -like "*vrq*")
+       {
+       $JBSTAT = $JOB_OF_SERVICE| Where-Object {$_.Name -eq $JB} | Select-Object State
+       }
+       else
+       {
        $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+       }
        $jobStatus.text = "            "+$JBSTAT.State
        $JobLabel.Text = '      Cостояние задачи:     ' + $JB     
     }
@@ -484,15 +554,55 @@ Function JOB_WORKER([string]$SERVER){
     $JobProcessButton.Text = "Process"
     $JobProcessButton.add_Click({
               
-              if($JobStart.Checked){
+           if($JobStart.Checked){
                 $JB = $JobList.SelectedItem
+                if($Server -like "*vrq-int*")
+                {
+                    ($TaskScheduler = New-Object -ComObject Schedule.Service).Connect($Server)
+                    $StartTask = $TaskScheduler.GetFolder('\').GetTask($JB)
+                    $StartTask.Run($null)
+                    Start-Sleep 3
+                    $JBSTAT = $TaskScheduler.GetFolder('\').GetTask($JB) | Select Name,@{
+                                                                                             Name = 'State'
+                                                                                             Expression = {switch ($_.State) {
+                                                                                                                    0 {'Unknown'}
+                                                                                                                    1 {'Disabled'}
+                                                                                                                    2 {'Queued'}
+                                                                                                                    3 {'Ready'}
+                                                                                                                    4 {'Running'}
+                                                                                                                    }
+                                                                                                                   }
+                                                                                                                  }
+                }
+                elseif($Server -like "*vrq-a*")
+                {
+                    ($TaskScheduler = New-Object -ComObject Schedule.Service).Connect($Server)
+                    $StartTask = $TaskScheduler.GetFolder('\NTSwincash').GetTask($JB)
+                    $StartTask.Run($null)
+                    Start-Sleep 3
+                    $JBSTAT = $TaskScheduler.GetFolder('\NTSwincash').GetTask($JB) | Select Name,@{
+                                                                                             Name = 'State'
+                                                                                             Expression = {switch ($_.State) {
+                                                                                                                    0 {'Unknown'}
+                                                                                                                    1 {'Disabled'}
+                                                                                                                    2 {'Queued'}
+                                                                                                                    3 {'Ready'}
+                                                                                                                    4 {'Running'}
+                                                                                                                    }
+                                                                                                                   }
+                                                                                                                  }  
+                }
+                else
+                {
                 Start-ScheduledTask -CimSession $Server -TaskName $JB
-                Start-Sleep -Seconds 5
+                Start-Sleep -Seconds 3
                 $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                }
+                
                 $jobStatus.text = "            "+$JBSTAT.State
                 $JobLabel.Text = '      Cостояние задачи:     ' + $JB  
               }
-              elseif($JobStop.Checked){
+          elseif($JobStop.Checked){
                 $JB = $JobList.SelectedItem
                 Stop-ScheduledTask -CimSession $Server -TaskName $JB
                 Start-Sleep -Seconds 5
@@ -500,21 +610,98 @@ Function JOB_WORKER([string]$SERVER){
                 $jobStatus.text = "            "+$JBSTAT.State
                 $JobLabel.Text = '      Cостояние задачи:     ' + $JB
               }
-              elseif($JobEnable.Checked){
+          elseif($JobEnable.Checked){
                 $JB = $JobList.SelectedItem
+                if($Server -like "*vrq-int*")
+                {
+                    ($TaskScheduler = New-Object -ComObject Schedule.Service).Connect($Server)
+                    $StartTask = $TaskScheduler.GetFolder('\').GetTask($JB)
+                    $StartTask.Enabled = $True
+                    Start-Sleep 3
+                    $JBSTAT = $TaskScheduler.GetFolder('\').GetTask($JB) | Select Name,@{
+                                                                                             Name = 'State'
+                                                                                             Expression = {switch ($_.State) {
+                                                                                                                    0 {'Unknown'}
+                                                                                                                    1 {'Disabled'}
+                                                                                                                    2 {'Queued'}
+                                                                                                                    3 {'Ready'}
+                                                                                                                    4 {'Running'}
+                                                                                                                    }
+                                                                                                                   }
+                                                                                                                  }
+                }
+                elseif($Server -like "*vrq-a*")
+                {
+                    ($TaskScheduler = New-Object -ComObject Schedule.Service).Connect($Server)
+                    $StartTask = $TaskScheduler.GetFolder('\NTSwincash').GetTask($JB)
+                    $StartTask.Enabled = $True
+                    Start-Sleep 3
+                    $JBSTAT = $TaskScheduler.GetFolder('\NTSwincash').GetTask($JB) | Select Name,@{
+                                                                                             Name = 'State'
+                                                                                             Expression = {switch ($_.State) {
+                                                                                                                    0 {'Unknown'}
+                                                                                                                    1 {'Disabled'}
+                                                                                                                    2 {'Queued'}
+                                                                                                                    3 {'Ready'}
+                                                                                                                    4 {'Running'}
+                                                                                                                    }
+                                                                                                                   }
+                                                                                                                  }  
+                }
+                else
+                {
                 Get-ScheduledTask -CimSession $Server -TaskName $JB | Enable-ScheduledTask
-                #Enable-ScheduledTask -CimSession $Server -TaskName $JB
                 Start-Sleep -Seconds 5
                 $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                }
                 $jobStatus.text = "            "+$JBSTAT.State
                 $JobLabel.Text = '      Cостояние задачи:     ' + $JB
               }
-              elseif($JobDisable.Checked){
+
+          elseif($JobDisable.Checked){
                 $JB = $JobList.SelectedItem
+                if($Server -like "*vrq-int*")
+                {
+                    ($TaskScheduler = New-Object -ComObject Schedule.Service).Connect($Server)
+                    $StartTask = $TaskScheduler.GetFolder('\').GetTask($JB) 
+                    $StartTask.Enabled = $false
+                    Start-Sleep 3
+                    $JBSTAT = $TaskScheduler.GetFolder('\').GetTask($JB) | Select Name,@{
+                                                                                             Name = 'State'
+                                                                                             Expression = {switch ($_.State) {
+                                                                                                                    0 {'Unknown'}
+                                                                                                                    1 {'Disabled'}
+                                                                                                                    2 {'Queued'}
+                                                                                                                    3 {'Ready'}
+                                                                                                                    4 {'Running'}
+                                                                                                                    }
+                                                                                                                   }
+                                                                                                                  }
+                }
+                elseif($Server -like "*vrq-a*")
+                {
+                    ($TaskScheduler = New-Object -ComObject Schedule.Service).Connect($Server)
+                    $StartTask = $TaskScheduler.GetFolder('\NTSwincash').GetTask($JB)
+                    $StartTask.Enabled = $False
+                    Start-Sleep 3
+                    $JBSTAT = $TaskScheduler.GetFolder('\NTSwincash').GetTask($JB) | Select Name,@{
+                                                                                             Name = 'State'
+                                                                                             Expression = {switch ($_.State) {
+                                                                                                                    0 {'Unknown'}
+                                                                                                                    1 {'Disabled'}
+                                                                                                                    2 {'Queued'}
+                                                                                                                    3 {'Ready'}
+                                                                                                                    4 {'Running'}
+                                                                                                                    }
+                                                                                                                   }
+                                                                                                                  }  
+                }
+                else
+                {
                 Get-ScheduledTask -CimSession $Server -TaskName $JB | Disable-ScheduledTask
-                #Disable-ScheduledTask -CimSession $Server -TaskName $JB
                 Start-Sleep -Seconds 5
                 $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
+                }
                 $jobStatus.text = "            "+$JBSTAT.State
                 $JobLabel.Text = '      Cостояние задачи:     ' + $JB
               }
@@ -546,8 +733,15 @@ Function CheckServices([string]$Server)
     $CheckForm.BackgroundImage = $ImageCheck
     $CheckForm.BackgroundImageLayout = "None"
     #$CheckForm.Size = New-Object System.Drawing.Size(250,110)
+    if($ImageCheck -eq $Null)
+    {
+     $CheckForm.Size = ('598,188')
+    }
+    else
+    {
     $CheckForm.Width = $ImageCheck.Width
     $CheckForm.Height = $ImageCheck.Height
+    }
     $CheckForm.StartPosition = "CenterScreen"
     $CheckForm.TopMost = $True
     $CheckForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
@@ -903,17 +1097,19 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 $DeployedServiceName = "$DestinationFileName.deployed"
                 $DeployedServiceName = $DeployedServiceName -replace '\s',''
                 Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
-                Start-Sleep 13
+                Start-Sleep 7
                 Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
                 Rename-Item "$DestinationFileName.undeployed" -NewName "$DestinationFileName.dodeploy"
-                Start-Sleep 5
+                Start-Sleep 7
                 if(Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying")
                 {
-                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно")
+                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OK","INFO")
+                    $Result
                 }
                 else
                 {
-                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!")
+                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!","REDEPLOY","OK","WARNING")
+                    $Result
                 }
             }
 
@@ -941,11 +1137,13 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 Start-Sleep 3
                 if(Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying")
                 {
-                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно")
+                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OK","INFO")
+                    $Result
                 }
                 else
                 {
-                    [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!")
+                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!","REDEPLOY","OK","WARNING")
+                    $Result
                 }
 
             }
@@ -1130,7 +1328,7 @@ $ProcessForm.Refresh()
 Function RELEASE_WINDOW(){
 
 $FontRelease = New-Object System.Drawing.Font("Colibri",10,[System.Drawing.FontStyle]::Bold)
-$ImageRelease =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\RLS.png")
+$ImageRelease =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\RLS.jpg")
 $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
@@ -1141,7 +1339,6 @@ $ReleaseForm.SizeGripStyle = "Hide"
 $ReleaseForm.BackgroundImage = $ImageRelease
 $ReleaseForm.BackgroundImageLayout = "None"
 $ReleaseForm.Size = New-Object System.Drawing.Size(150,170)
-$ReleaseForm
 $ReleaseForm.StartPosition = "CenterScreen"
 $ReleaseForm.TopMost = $True
 $ReleaseForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedToolWindow
@@ -1233,10 +1430,20 @@ $VRX = ('1','2','3','4','5','6')
 $VRQ = ('1','2','3','4','5','6','7')
 # Create base form.
 
-$Image =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\NTS.jpg")
-$Font = New-Object System.Drawing.Font("Times New Roman",8,[System.Drawing.FontStyle]::Bold)
-$Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
 
+function ENTERCOLOR($ELEMENT){
+		$ELEMENT.BackColor = 'LightGreen'
+	}
+function LEAVECOLOR($ELEMENT){
+        $ELEMENT.BackColor = 'Control'
+    }
+
+
+
+$Image =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\NTS.jpg")
+$Font = New-Object System.Drawing.Font("Comic Sans MS",8,[System.Drawing.FontStyle]::Bold)
+$Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
+$FontBanksy = New-Object System.Drawing.Font("Tempus Sans ITC",8,[System.Drawing.FontStyle]::Regular)
 
 # Initialize Main Form #
 $objForm = New-Object System.Windows.Forms.Form 
@@ -1244,10 +1451,14 @@ $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
 $objForm.SizeGripStyle = "Hide"
 $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
-$objForm.Text = "Программа для безумного управления сервисами V1.2"
+$objForm.Text = "Программа для безумного управления сервисами V1.5"
 $objForm.StartPosition = "CenterScreen"
 $objForm.Height = '370'
-$objForm.Width = $Image.Width
+    if($Image -eq $null){
+        $objForm.Width = '580'}
+    else{
+        $objForm.Width = $Image.Width 
+        }
 $objForm.Icon = $Icon
 
 # Configure keyboard intercepts for ESC & ENTER.
@@ -1266,6 +1477,14 @@ $objForm.Add_KeyDown({
     }
 })
 
+#BANKSY LABEL
+$FOKINLAB = New-Object System.Windows.Forms.Label
+$FOKINLAB.Location = ('455,280')
+$FOKINLAB.Text = "Created By Fokin"
+$FOKINLAB.Font = $FontBanksy
+#$FOKINLAB.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+$FOKINLAB.BackColor =  'Transparent'
+$FOKINLAB.AutoSize = $True
 
 #GROUP BOX SRED
 $MyGroupBox = New-Object System.Windows.Forms.GroupBox
@@ -1278,13 +1497,13 @@ $MyGroupBox.Backcolor = 'Transparent'
 
 #RADIO VRX
 $RadioVRX = New-Object System.Windows.Forms.RadioButton
-$RadioVRX.Location = New-Object System.Drawing.Size(10,15)
+$RadioVRX.Location = New-Object System.Drawing.Size(10,19)
 $RadioVRX.Checked = $True
 $RadioVRX.Text = "VRX"
 
 #RADIO VRQ
 $RadioVRQ = $RadioButton2 = New-Object System.Windows.Forms.RadioButton
-$RadioVRQ.Location = New-Object System.Drawing.Size(10,35)
+$RadioVRQ.Location = New-Object System.Drawing.Size(10,39)
 $RadioVRQ.Text = "VRQ"
 $RadioVRQ.Checked = $False
 # ADD GROUP BOX ON FORM
@@ -1318,18 +1537,18 @@ $MyGroupBox2.Backcolor = 'Transparent'
 
 #КОНТУР
 $RadioContur = New-Object System.Windows.Forms.RadioButton
-$RadioContur.Location = New-Object System.Drawing.Size(10,10)
+$RadioContur.Location = New-Object System.Drawing.Size(10,14)
 $RadioContur.Text = "Контур"
 $RadioContur.BackColor = 'Transparent'
 $RadioContur.Checked = 'True'
 #МАГАЗИНЫ
 $RadioMAG = New-Object System.Windows.Forms.RadioButton
-$RadioMAG.Location = New-Object System.Drawing.Size(10,30)
+$RadioMAG.Location = New-Object System.Drawing.Size(10,34)
 $RadioMAG.Text = "Магазины"
 $RadioMAG.BackColor = 'Transparent'
 #ИНТЕРФЕЙСЫ
 $RadioINT = New-Object System.Windows.Forms.RadioButton
-$RadioINT.Location = New-Object System.Drawing.Size(10,50)
+$RadioINT.Location = New-Object System.Drawing.Size(10,54)
 $RadioINT.Text = "Интерфейс"
 #ADD SECOND GROUP BOX
 $objForm.Controls.Add($MyGroupBox2)
@@ -1411,11 +1630,12 @@ $MyGroupBox2.Controls.AddRange(@($RadioContur,$RadioMAG,$RadioINT))
 
 # Create BUTTON FOR START REDEPLOY WILDFLY
 $RestartButton = New-Object System.Windows.Forms.Button
-$RestartButton.Location = New-Object System.Drawing.Size(5,270)
-$RestartButton.Size = New-Object System.Drawing.Size(75,23)
+$RestartButton.Location = New-Object System.Drawing.Size(5,275)
+$RestartButton.Size = New-Object System.Drawing.Size(125,24)
 $RestartButton.Text = "RESTART WILDFLY"
 $RestartButton.Font = $Font
-$RestartButton.AutoSize = 'True'
+#$RestartButton.AutoSize = 'True'
+
 
 
 
@@ -1439,11 +1659,11 @@ $RestartButton.Add_Click(
 
 
 $DeployWAR = New-Object System.Windows.Forms.Button
-$DeployWAR.Location = New-Object System.Drawing.Size(130,270)
-$DeployWAR.Size = New-Object System.Drawing.Size(75,23)
+$DeployWAR.Location = New-Object System.Drawing.Size(130,275)
+$DeployWAR.Size = New-Object System.Drawing.Size(115,24)
 $DeployWAR.Text = "DEPLOY "".WAR"""
 $DeployWAR.Font = $Font
-$DeployWAR.AutoSize = 'True'
+#$DeployWAR.AutoSize = 'True'
 
 $DeployWAR.Add_Click({
     $Answer = CHECK_SETTINGS
@@ -1460,10 +1680,10 @@ $DeployWAR.Add_Click({
 
 $CheckServicesBTN = New-Object System.Windows.Forms.Button
 $CheckServicesBTN.Location = New-Object System.Drawing.Size(5,300)
-$CheckServicesBTN.Size = New-Object System.Drawing.Size(75,23)
-$CheckServicesBTN.Text = "ПРОВЕРКА СЕРВИСОВ"
+$CheckServicesBTN.Size = New-Object System.Drawing.Size(145,24)
+$CheckServicesBTN.Text = "ПРОВЕРКА СЛУЖБ"
 $CheckServicesBTN.Font = $Font
-$CheckServicesBTN.AutoSize = 'True'
+#$CheckServicesBTN.AutoSize = 'True'
 
 $CheckServicesBTN.add_Click({
     $Answer = CHECK_SETTINGS
@@ -1500,10 +1720,10 @@ $JobButton.add_Click({
 
 #FOBO INSTALL
 $FoboButton = New-Object System.Windows.Forms.Button
-$FoboButton.Location = New-Object System.Drawing.Size(230,300)
-$FoboButton.Size = New-Object System.Drawing.Size(120,23)
+$FoboButton.Location = New-Object System.Drawing.Size(225,300)
+$FoboButton.Size = New-Object System.Drawing.Size(140,24)
 $FoboButton.Font = $Font
-$FoboButton.Text = "Fobo_Install (Beta)"
+$FoboButton.Text = "FOBO INSTALL (Beta)"
 
 $FoboButton.Add_Click({
 
@@ -1566,6 +1786,7 @@ $OpenFLDR.add_Click({
     
 })
 
+
 # Cancel EXIT Button
 $CancelButton = New-Object System.Windows.Forms.Button
 $CancelButton.Location = New-Object System.Drawing.Size(440,300)
@@ -1576,8 +1797,36 @@ $CancelButton.AutoSize = 'True'
 $CancelButton.Add_Click({$objForm.Close()})
 
 
+#COLOR BUTTON SELECTION BLOCK {
+$CancelButton.add_MouseHover({ENTERCOLOR($CancelButton)})
+$CancelButton.add_MouseLeave({LEAVECOLOR($CancelButton)})
+
+$RestartButton.add_MouseHover({ENTERCOLOR($RestartButton)})
+$RestartButton.add_MouseLeave({LEAVECOLOR($RestartButton)})
+
+$OpenFLDR.add_MouseHover({ENTERCOLOR($OpenFLDR)})
+$OpenFLDR.add_MouseLeave({LEAVECOLOR($OpenFLDR)})
+
+$TEMPBTN.add_MouseHover({ENTERCOLOR($TEMPBTN)})
+$TEMPBTN.add_MouseLeave({LEAVECOLOR($TEMPBTN)})
+
+$FoboButton.add_MouseHover({ENTERCOLOR($FoboButton)})
+$FoboButton.add_MouseLeave({LEAVECOLOR($FoboButton)})
+
+$JobButton.add_MouseHover({ENTERCOLOR($JobButton)})
+$JobButton.add_MouseLeave({LEAVECOLOR($JobButton)})
+
+$CheckServicesBTN.add_MouseHover({ENTERCOLOR($CheckServicesBTN)})
+$CheckServicesBTN.add_MouseLeave({LEAVECOLOR($CheckServicesBTN)})
+
+$DeployWAR.add_MouseHover({ENTERCOLOR($DeployWAR)})
+$DeployWAR.add_MouseLeave({LEAVECOLOR($DeployWAR)})
+
+# } ###########################
+
 
 #ADD TO FORM
+$objForm.Controls.Add($FOKINLAB)
 $objForm.Controls.Add($OpenFLDR)
 $objForm.Controls.Add($TEMPBTN)
 $objForm.Controls.Add($FoboButton)
