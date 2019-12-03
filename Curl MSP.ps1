@@ -1,7 +1,7 @@
 ﻿##[Ps1 To Exe]
 ##
 ##Kd3HDZOFADWE8uO1
-##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBnaRpQCTE14hCv5CF+CCKNKBaJA+tgSWn0=
+##Nc3NCtDXTlaDjofG5iZk2UD9fW4kZcyVhZKo04+w8OvoqBnQSpUaT115kizuO220VfcBavMauNUURyI5KvMZ4brvCPOmV6MNl9wuM73Y/+FxW1Pb7PM=
 ##Kd3HFJGZHWLWoLaVvnQnhQ==
 ##LM/RF4eFHHGZ7/K1
 ##K8rLFtDXTiW5
@@ -73,6 +73,7 @@ $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe"
 $Font = New-Object System.Drawing.Font("Comic Sans MS",9,[System.Drawing.FontStyle]::Bold)
 $FontRES = New-Object System.Drawing.Font("ARIAL",9,[System.Drawing.FontStyle]::Regular)
 $Image =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\RESTFORM.jpg")
+$FontBanksy = New-Object System.Drawing.Font("Tempus Sans ITC",8,[System.Drawing.FontStyle]::Bold)
 
 if (-not ([System.Management.Automation.PSTypeName]"TrustAllCertsPolicy").Type)
 {
@@ -132,7 +133,12 @@ if ([System.Net.ServicePointManager]::CertificatePolicy.ToString() -ne "TrustAll
     $MSP_GROUP.Backcolor = 'Transparent'
     $MSP_GROUP.Controls.Add($MSP_VALUE)
 
-    
+    $FOKINLAB = New-Object System.Windows.Forms.Label
+    $FOKINLAB.Location = ('290,260')
+    $FOKINLAB.Text = "Created By Fokin"
+    $FOKINLAB.Font = $FontBanksy
+    $FOKINLAB.BackColor =  'Transparent'
+    $FOKINLAB.AutoSize = $True
 
 
     $MSP_RESULT = New-Object System.Windows.Forms.TextBox
@@ -285,7 +291,7 @@ $CRED = New-Object Management.Automation.PSCredential ('FOBO', $PWD)
     $MSP_GROUP3.Backcolor = 'Transparent'
     $MSP_GROUP3.Controls.AddRange(@($MSP_RADIO1,$MSP_RADIO2))
 
-
+$MSP_FORM.Controls.Add($FOKINLAB)
 $MSP_FORM.Controls.Add($MSP_GROUP)   
 $MSP_FORM.Controls.Add($MSP_GROUP2)
 $MSP_FORM.Controls.Add($MSP_GROUP3)

@@ -191,18 +191,59 @@
 "vdi-test01-190",
 "vdi-test01-191",
 "vdi-test01-192",
-"vdi-test01-193"
+"vdi-test01-193",
+"FOBO-WS-TST-015",
+"FOBO-WS-TST-006",
+"FOBO-WS-TST-036",
+"FOBO-WS-TST-001",
+"FOBO-WS-TST-018",
+"FOBO-WS-TST-007",
+"FOBO-WS-TST-039",
+"FOBO-WS-TST-040",
+"FOBO-WS-TST-012",
+"FOBO-WS-TST-013",
+"FOBO-WS-TST-043",
+"FOBO-WS-TST-042",
+"FOBO-WS-TST-002",
+"GLAZOVPC",
+"FOBO-WS-TST-reg",
+"FOBO-WS-TST-003",
+"FOBO-WS-TST-024",
+"FOBO-WS-TST-021",
+"IVSHIN",
+"sineokovpc",
+"FOBO-WS-TST-020",
+"FOBO-WS-TST-017",
+"FOBO-WS-TST-026",
+"FOBO-WS-TST-038",
+"plovechkin",
+"FOBO-WS-TST-020",
+"FOBO-WS-TST-017",
+"FOBO-WS-TST-022",
+"Autotest1"
 
+$SOLO = 'FOBO-WS-TST-037',
+"FOBO-WS-TST-009"
 
-
-foreach($S in $Server)
+foreach ($S in $Server)
 {
 if(Test-Path "\\$S\c$\Arcus2")
 {
-    $S + " EFT СУЩЕСТВУЕТ"  | Out-File C:\1\Cassa.txt -Append
+    "EFT -  ON BOARD : " + $S  | Out-File C:\1\Cassa.txt -Append
     $T = Get-WmiObject -Class Win32_Process -ComputerName $S -Filter "name='sales.exe'" -ErrorAction SilentlyContinue
-    "SALES ЗАПУЩЕН НА " + $T.__SERVER | Out-File C:\1\Cassa.txt -Append
-}
+    if($T -ne $Null)
+    {
+    (Get-WmiObject -Class Win32_Process -ComputerName $S -Filter "name='sales.exe'").terminate()
+    "SALES остановлен на :  " + $T.__SERVER | Out-File C:\1\Cassa.txt -Append
+    Copy-Item C:\1\Arcus2 -Destination "\\$S\C$\"  -Recurse -Force
+    "Установка обновления на $S выполнена." | Out-File C:\1\Cassa.txt -Append
+    }
+    else
+    {
+     Copy-Item C:\1\Arcus2 -Destination "\\$S\C$\"  -Recurse -Force
+     "Установка новых файлов на $S выполнена." | Out-File C:\1\Cassa.txt -Append
+    }
+    }
 else
 {
 }

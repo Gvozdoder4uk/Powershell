@@ -89,6 +89,16 @@ Function DEPLOYFOBO([string]$Machine, [string]$Server){
                     $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
                     Start-Sleep -Seconds 2
                     Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
+                    $XMLNAME =  Get-ChildItem "\\$Server\C$\NTSwincash\config\*" -Include "dblink_V*" 
+                    $XMLNAME.Name
+                    [xml]$Doc = New-Object System.Xml.XmlDocument                 
+                    $FilePath = "\\$Server\C$\NTSwincash\config\dblinks.xml"
+                    $Path = "\\$Machine\C$\NTSwincash\config\dblinks.xml"
+                    $Path2 = "\\$Machine\C$\NTSwincash\config\dblinks_MobInv.xml"
+                    $doc.Load($filePath)
+                    $doc.linklist.linkref.file = $XMLNAME.name
+                    $doc.Save($Path)
+                    $doc.Save($Path2)
                     $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
                     Start-Sleep -Seconds 2
                     xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
@@ -156,6 +166,16 @@ Function DEPLOYFOBO([string]$Machine, [string]$Server){
                                 $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
                                 Start-Sleep -Seconds 2
                                 Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
+                                $XMLNAME =  Get-ChildItem "\\$Server\C$\NTSwincash\config\*" -Include "dblink_V*" 
+                                $XMLNAME.Name
+                                [xml]$Doc = New-Object System.Xml.XmlDocument                 
+                                $FilePath = "\\$Server\C$\NTSwincash\config\dblinks.xml"
+                                $Path = "\\$Machine\C$\NTSwincash\config\dblinks.xml"
+                                $Path2 = "\\$Machine\C$\NTSwincash\config\dblinks_MobInv.xml"
+                                $doc.Load($filePath)
+                                $doc.linklist.linkref.file = $XMLNAME.name
+                                $doc.Save($Path)
+                                $doc.Save($Path2)
                                 $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
                                 Start-Sleep -Seconds 2
                                 xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
@@ -503,7 +523,7 @@ Function JOB_WORKER([string]$SERVER){
        {
        $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
        }
-       $jobStatus.text = "            "+$JBSTAT.State
+       $jobStatus.text = "         "+$JBSTAT.State
        $JobLabel.Text = '      Cостояние задачи:     ' + $JB     
     }
     $JobList.add_SelectedIndexChanged($JL_SELECT)
@@ -550,7 +570,7 @@ Function JOB_WORKER([string]$SERVER){
     $JobDisable.Font = $FontJob
 #Create Processing Button
     $JobProcessButton = New-Object  System.Windows.Forms.Button
-    $JobProcessButton.Location = New-Object System.Drawing.Size(217,170)
+    $JobProcessButton.Location = New-Object System.Drawing.Size(215,180)
     $JobProcessButton.Text = "Process"
     $JobProcessButton.add_Click({
               
@@ -594,20 +614,23 @@ Function JOB_WORKER([string]$SERVER){
                 }
                 else
                 {
-                Start-ScheduledTask -CimSession $Server -TaskName $JB
+                $JB = $JobList.SelectedItem
+                $path = ( Get-ScheduledTask -CimSession $Server -TaskName $JB).TaskPath
+                Start-ScheduledTask -CimSession $Server -TaskName $JB -TaskPath $path
                 Start-Sleep -Seconds 3
                 $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
                 }
                 
-                $jobStatus.text = "            "+$JBSTAT.State
+                $jobStatus.text = "         "+$JBSTAT.State
                 $JobLabel.Text = '      Cостояние задачи:     ' + $JB  
               }
           elseif($JobStop.Checked){
                 $JB = $JobList.SelectedItem
-                Stop-ScheduledTask -CimSession $Server -TaskName $JB
+                $path = ( Get-ScheduledTask -CimSession $Server -TaskName $JB).TaskPath
+                Stop-ScheduledTask -CimSession $Server -TaskName $JB -TaskPath $path
                 Start-Sleep -Seconds 5
                 $JBSTAT = Get-ScheduledTask -CimSession $Server -TaskName $JB
-                $jobStatus.text = "            "+$JBSTAT.State
+                $jobStatus.text = "          "+$JBSTAT.State
                 $JobLabel.Text = '      Cостояние задачи:     ' + $JB
               }
           elseif($JobEnable.Checked){
@@ -1097,11 +1120,15 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 $DeployedServiceName = "$DestinationFileName.deployed"
                 $DeployedServiceName = $DeployedServiceName -replace '\s',''
                 Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
-                Start-Sleep 7
-                Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
-                Rename-Item "$DestinationFileName.undeployed" -NewName "$DestinationFileName.dodeploy"
-                Start-Sleep 7
-                if(Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying")
+                Start-Sleep 5
+                #Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
+                Rename-Item "$DestinationFileName.undeploy" -NewName "$DestinationFileName.dodeploy"
+                Start-Sleep 5
+                $FirstCheck = Test-Path  "$DestinationFileName.deployed"
+                $SecondCheck = Test-Path  "$DestinationFileName.isdeploying"
+                #$FirstCheck  = Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying"
+                #$SecondCheck = Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.dodeployed"
+                if($FirstCheck -eq $True -or $SecondCheck -eq $True)
                 {
                     $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OK","INFO")
                     $Result
@@ -1131,18 +1158,24 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 if($TST -eq ''){ [System.Windows.Forms.MessageBox]::Show("Не выбран файл!");return}
             #Выполнение передеплоя  
                 Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
-                Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.deployed","$TST*.failed" | Remove-Item
-                Start-Sleep 13
-                Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item
-                Start-Sleep 3
-                if(Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying")
+                Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.failed" | Remove-Item
+                Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
+                Start-Sleep 5
+                Rename-Item "$DestinationFileName.undeploy" -NewName "$DestinationFileName.dodeploy"
+                #Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item
+                Start-Sleep 10
+                $FirstCheck = Test-Path  "$DestinationFileName.deployed"
+                $SecondCheck = Test-Path  "$DestinationFileName.isdeploying"
+                #$FirstCheck  = Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST.isdeploying"
+                #$SecondCheck = Get-ChildItem -Path "\\$Server\C$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST.deployed"
+                if($FirstCheck -eq $True -or $SecondCheck -eq $True)
                 {
-                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OK","INFO")
+                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OKCancel","INFO")
                     $Result
                 }
                 else
                 {
-                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!","REDEPLOY","OK","WARNING")
+                    $Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!","REDEPLOY","OKCancel","WARNING")
                     $Result
                 }
 
@@ -1249,25 +1282,29 @@ Function KillWildfly([string]$SRV)
     Start-Sleep -Seconds 3
     if($RLS -eq '19'){
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.failed" | Remove-Item
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Exclude "vfs" | Remove-Item -Recurse 
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
     }
     if($RLS -eq '20'){
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.readclaim.*","*.failed","*.facade*","*.transfer*" | Remove-Item
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Exclude "vfs" | Remove-Item 
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
     }
     if($RLS -eq '21'){
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.readclaim.*","*.failed","*.facade*","*.transfer*" | Remove-Item
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\"  -Exclude "vfs" | Remove-Item 
         #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
     }
     if($RLS -eq '22'){
         Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "*.backup","*.deployed","*.readclaim.*","*.failed","*.facade*","*.transfer*" | Remove-Item
-        #Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\tmp\"  -Exclude "vfs" | Remove-Item 
+        #Remove-Item -Path "\\$SRV\C$\NTSwincash\jboss\wildfly10\standalone\tmp\" -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "\\$SRV\C`$\NTSwincash\jboss\wildfly10\standalone\data\" -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 5
     #Progress
     Get-Service -Name Wildfly -ComputerName $server | Start-Service
     Start-Sleep -Seconds 2
@@ -1451,7 +1488,7 @@ $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
 $objForm.SizeGripStyle = "Hide"
 $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
-$objForm.Text = "Программа для безумного управления сервисами V1.5"
+$objForm.Text = "Программа для безумного управления сервисами V1.6"
 $objForm.StartPosition = "CenterScreen"
 $objForm.Height = '370'
     if($Image -eq $null){
