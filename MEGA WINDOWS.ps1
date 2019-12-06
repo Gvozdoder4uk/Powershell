@@ -1626,10 +1626,17 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 Get-ChildItem -Path  "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.failed" | Remove-Item
                 $DeployedServiceName = "$DestinationFileName.deployed"
                 $DeployedServiceName = $DeployedServiceName -replace '\s',''
-                Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
-                Start-Sleep 5
-                #Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
-                Rename-Item "$DestinationFileName.undeploy" -NewName "$DestinationFileName.dodeploy"
+                if(Test-Path "$DestinationFileName.deployed")
+                {
+                    Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
+                    Start-Sleep 5
+                    #Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
+                    Rename-Item "$DestinationFileName.undeploy" -NewName "$DestinationFileName.dodeploy"
+                }
+                else
+                {
+                    New-Item -ItemType File "$DestinationFileName.dodeploy"  
+                }
                 Start-Sleep 5
                 $FirstCheck = Test-Path  "$DestinationFileName.deployed"
                 $SecondCheck = Test-Path  "$DestinationFileName.isdeploying"
@@ -1638,15 +1645,18 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 if($FirstCheck -eq $True -or $SecondCheck -eq $True)
                 {
                     #$Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OK","INFO")
-                    
+                    $objForm.TopMost = $False
                     New-WPFMessageBox @WinParamSuccess
+                    $objForm.TopMost = $True
                     #$Result
                 }
                 else
                 {
                     #$Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!","REDEPLOY","OK","WARNING")
                     #$Result
+                    $objForm.TopMost = $False
                     New-WPFMessageBox @WinParamFail
+                    $objForm.TopMost = $True
                 }
             }
 
@@ -1669,10 +1679,20 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
             #Выполнение передеплоя  
                 Invoke-Item "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\"
                 Get-ChildItem -Path  "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.backup","$TST*.failed" | Remove-Item
-                Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
-                Start-Sleep 5
-                Rename-Item "$DestinationFileName.undeploy" -NewName "$DestinationFileName.dodeploy"
-                #Get-ChildItem -Path "\\$Server\C`$\NTSwincash\jboss\wildfly10\standalone\deployments\*" -Include "$TST*.undeployed" | Remove-Item
+
+            #Проверка наличия установленного сервиса
+                if(Test-Path "$DestinationFileName.deployed")
+                {
+                    Rename-Item "$DestinationFileName.deployed" -NewName "$DestinationFileName.undeploy"
+                    Start-Sleep 5
+                    #Get-ChildItem -Path "\\$Server\C`$\wildfly\wildfly10\standalone\deployments\*" -Include "$TST.undeploy" | Remove-Item
+                    Rename-Item "$DestinationFileName.undeploy" -NewName "$DestinationFileName.dodeploy"
+                }
+                else
+                {
+                    New-Item -ItemType File "$DestinationFileName.dodeploy"  
+                }
+
                 Start-Sleep 10
                 $FirstCheck = Test-Path  "$DestinationFileName.deployed"
                 $SecondCheck = Test-Path  "$DestinationFileName.isdeploying"
@@ -1682,13 +1702,17 @@ Cancel: Выход","Выбор действия!","YesNoCancel")
                 {
                     #$Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса выполнена успешно","REDEPLOY","OKCancel","INFO")
                     #$Result
+                    $objForm.TopMost = $False
                     New-WPFMessageBox @WinParamSuccess
+                    $objForm.TopMost = $True
                 }
                 else
                 {
                     #$Result = [System.Windows.Forms.MessageBox]::Show("Переустановка сервиса не выполнена!","REDEPLOY","OKCancel","WARNING")
                     #$Result
+                    $objForm.TopMost = $False
                     New-WPFMessageBox @WinParamFail
+                    $objForm.TopMost = $True
                 }
 
             }
@@ -2000,7 +2024,7 @@ $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
 $objForm.SizeGripStyle = "Hide"
 $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
-$objForm.Text = "Программа для безумного управления сервисами V1.6"
+$objForm.Text = "Программа для безумного управления сервисами V1.7"
 $objForm.StartPosition = "CenterScreen"
 $objForm.Height = '370'
     if($Image -eq $null){
