@@ -930,6 +930,11 @@ Function JOB_WORKER([string]$SERVER){
        }
      }
     }
+    elseif($Server -like "*vrq-ajb*")
+    {
+     [System.Windows.Forms.MessageBox]::Show("Для серверов центра работа сервиса не предусмотрена!","Контур")
+     return
+    }
     elseif($Server -like '*vrq-a*')
     {
      $Schedule = New-Object -ComObject "Schedule.Service"
@@ -953,7 +958,7 @@ Function JOB_WORKER([string]$SERVER){
      }
     }
     elseif($Server -like '*ajb*')
-    {[System.Windows.Forms.MessageBox]::Show("Для серверов центра работа сервиса не предусмотрена!","Контуры")
+    {[System.Windows.Forms.MessageBox]::Show("Для серверов центра работа сервиса не предусмотрена!","Контур")
      return
         }
     elseif($Server -like '*int*')
@@ -1900,8 +1905,8 @@ $ProcessForm.Refresh()
 #RELEASE CHOICE FUNCTION START 
 Function RELEASE_WINDOW(){
 
-$FontRelease = New-Object System.Drawing.Font("Colibri",10,[System.Drawing.FontStyle]::Bold)
-$ImageRelease =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\RLS.jpg")
+$FontRelease = New-Object System.Drawing.Font("Eras Bold ITC",10,[System.Drawing.FontStyle]::Bold)
+$ImageRelease =  [system.drawing.image]::FromFile("\\dubovenko\D\SOFT\wallapers\REL.jpg")
 $Icon = [system.drawing.icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
@@ -1911,12 +1916,24 @@ $ReleaseForm = New-Object System.Windows.Forms.Form
 $ReleaseForm.SizeGripStyle = "Hide"
 $ReleaseForm.BackgroundImage = $ImageRelease
 $ReleaseForm.BackgroundImageLayout = "None"
-$ReleaseForm.Size = New-Object System.Drawing.Size(150,170)
+$ReleaseForm.Size = New-Object System.Drawing.Size(150,202)
 $ReleaseForm.StartPosition = "CenterScreen"
 $ReleaseForm.TopMost = $True
 $ReleaseForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedToolWindow
 $ReleaseForm.Text = "ВЫБЕРИТЕ РЕЛИЗ"
 $ReleaseForm.Icon  = $Icon
+$ReleaseForm.ControlBox = $False
+
+
+
+  $WinParamFail = @{
+        Content = "Отмена операции перезагрузки сервисов!"
+        Title = "Decline Process"
+        TitleFontSize = "16"
+        TitleTextForeground = "Salmon"
+        ContentFontWeight = "Bold"
+        ContentBackground = "Salmon"
+            }
 
 
 
@@ -1960,6 +1977,12 @@ $ButtonAccept.Text = "Подтвердить"
 $ButtonAccept.Width = $ReleaseForm.Width
 $ButtonAccept.Height = '33'
 
+$ButtonDecline = New-Object System.Windows.Forms.Button 
+$ButtonDecline.Location = New-Object System.Drawing.Size(-3,130)
+$ButtonDecline.Text = "Отменить"
+$ButtonDecline.Width = $ReleaseForm.Width
+$ButtonDecline.Height = '33'
+
 if ($ReleaseButton0.Checked -eq $true) {$Global:RLS = 19} 
 if ($ReleaseButton1.Checked -eq $true) {$Global:RLS = 20}
 if ($ReleaseButton2.Checked -eq $true) {$Global:RLS = 21}
@@ -1967,16 +1990,29 @@ if ($ReleaseButton3.Checked -eq $true) {$Global:RLS = 22}
 
 function BTN_CLICK()
 {
+  $Global:QA="1"
   if ($ReleaseButton0.Checked -eq $true) {$Global:RLS = 19} 
   if ($ReleaseButton1.Checked -eq $true) {$Global:RLS = 20}
   if ($ReleaseButton2.Checked -eq $true) {$Global:RLS = 21}
-  if ($ReleaseButton3.Checked -eq $true) {$Global:RLS = 22}  
+  if ($ReleaseButton3.Checked -eq $true) {$Global:RLS = 22}
+
 }
 $ButtonAccept.Add_Click(
 {
 BTN_CLICK;$ReleaseForm.Close()
 })
-$ReleaseForm.Controls.Add($ButtonAccept)
+
+$ButtonDecline.Add_Click({
+                    
+                    $Global:QA="2"
+                    $objForm.TopMost = $False
+                    New-WPFMessageBox @WinParamFail
+                    $objForm.TopMost = $True
+                    $ReleaseForm.Close()
+                    return $QA
+
+})
+$ReleaseForm.Controls.AddRange(@($ButtonAccept,$ButtonDecline))
 $ReleaseForm.Add_Shown({$ReleaseForm.Activate()})
 $ReleaseForm.Controls.AddRange(@($ReleaseButton0,$ReleaseButton1,$ReleaseButton2,$ReleaseButton3))
 $ReleaseForm.ShowDialog()
@@ -2024,7 +2060,7 @@ $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
 $objForm.SizeGripStyle = "Hide"
 $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
-$objForm.Text = "Программа для безумного управления сервисами V1.7"
+$objForm.Text = "Программа для безумного управления сервисами V1.8"
 $objForm.StartPosition = "CenterScreen"
 $objForm.Height = '370'
     if($Image -eq $null){
@@ -2154,7 +2190,23 @@ $RadioINT.Add_Click($eventMAG)
 
 
 
-
+$CheckTop = New-Object System.Windows.Forms.CheckBox
+$CheckTop.Location = ('10,5')
+$CheckTop.Text = "Window ON Top"
+$CheckTop.Checked = $True
+$CheckTop.AutoSize = $True
+$CheckTop.BackColor = 'Transparent'
+$CheckTop.Font = $Font
+$CheckTop.add_Click({
+    if($CheckTop.Checked -eq $True)
+    {
+        $objForm.TopMost = $True
+    }
+    elseif($CheckTop.Checked -eq $False)
+    {
+        $objForm.TopMost = $False
+    }
+    })
 
 #GROUP BLOCK CHOICE
 $MyGroupBox3 = New-Object System.Windows.Forms.GroupBox
@@ -2221,10 +2273,16 @@ $RestartButton.Add_Click(
                { KillWildfly($SERVER) }
                else{
                RELEASE_WINDOW
+               if($QA -eq "2")
+               { return }
+               elseif($QA -eq "1")
+               {
                KillWildfly($SERVER)
+               }
                }
                $Server = ''
                $RLS = ''
+               $Global:QA = ''
              }
         "NO"{ return }
         }    
@@ -2399,6 +2457,7 @@ $DeployWAR.add_MouseLeave({LEAVECOLOR($DeployWAR)})
 
 
 #ADD TO FORM
+$objForm.Controls.Add($CheckTop)
 $objForm.Controls.Add($FOKINLAB)
 $objForm.Controls.Add($OpenFLDR)
 $objForm.Controls.Add($TEMPBTN)
