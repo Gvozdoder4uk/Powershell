@@ -1,0 +1,34 @@
+#------------------------------------------------------
+# TRAINIG WITH GITHUB ACTIONS
+#
+# Copyleft (c) Fokin Oleg
+#------------------------------------------------------
+
+name: My test Packages
+env:
+  APPLICATIONNAME: "My POWERSHELL"
+  DEPLOY_PACKAGE_NAME: "POWERSHEL_PROJECTS RELEASE $({ github.sha })"
+  
+on:
+  push:
+    branches: 
+      - master
+        - 
+#MY FIRST TEST TASK ON GITACTION
+
+jobs:
+  my_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: CHECK FILES 1
+      run: ls -l
+    - name: Run a multi-line script
+      run: |
+        echo Add other actions to build,
+        echo test, and deploy your project.
+        
+  my_deploy:
+    runs-on: ubuntu-latest
+    
