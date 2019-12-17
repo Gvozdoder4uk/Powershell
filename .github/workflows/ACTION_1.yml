@@ -13,7 +13,7 @@ on:
   push:
     branches: 
       - master
-        - 
+        
 #MY FIRST TEST TASK ON GITACTION
 
 jobs:
