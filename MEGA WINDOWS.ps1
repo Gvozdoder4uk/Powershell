@@ -26,8 +26,8 @@
 ##LNzLEpGeC3fMu77Ro2k3hQ==
 ##L97HB5mLAnfMu77Ro2k3hQ==
 ##P8HPCZWEGmaZ7/K1
-##L8/UAdDXTlaDjofG5iZk2UD9fW4kZcyVhZKi14qo8PrQnQr7ZtogZntbpWf5HE7d
-##Kc/BRM3KXhU=
+##L8/UAdDXTlaDjofG5iZk2UD9fW4kZcyVhZKi14qo8PrQC95opyrOCeWY1pgetJkNh0LLFUXKBAGhiq3wnyI30r3HHvW6TacGnqNPeeqEo7E9KeogUnJEDKlMf0Zww72N5olPsBO0pf6bdYVtm91DOV/Ybl+TfezO66pJmnerl0pxmBIOG7KZ9g==
+##Kc/BRM3KXxU=
 ##
 ##
 ##fd6a9f26a06ea3bc99616d4851b372ba
@@ -547,6 +547,394 @@ function Hide-Console
 #AUTOINSTALL FOBO START
 #
 Function DEPLOYFOBO([string]$Machine, [string]$Server){
+
+####################################################################
+# START FUNCTION FOR WMI GET-SERVICE                               #
+####################################################################
+Function INSTALL_FOBO_NEW([string]$Server,[string]$Machine)
+{
+#Прочекать сервис
+function Get-ServiceNTS(
+    [string]$serviceName = $(throw "serviceName is required"), 
+    [string]$targetServer = $(throw "targetServer is required"))
+{
+    $service = Get-WmiObject -Namespace "root\cimv2" -Class "Win32_Service" `
+        -ComputerName $targetServer -Filter "Name='$serviceName'" -Impersonation 3    
+    return $service
+}
+
+#Удалить сервис
+function Uninstall-ServiceNTS(
+    [string]$serviceName = $(throw "serviceName is required"), 
+    [string]$targetServer = $(throw "targetServer is required"))
+{
+    $service = Get-ServiceNTS $serviceName $targetServer
+     
+    if (!($service))
+    { 
+        Write-Warning "Failed to find service $serviceName on $targetServer. Nothing to uninstall."
+        return
+    }
+     
+    "Found service $serviceName on $targetServer; checking status"
+             
+    if ($service.Started)
+    {
+        "Stopping service $serviceName on $targetServer"
+        #could also use Set-Service, net stop, SC, psservice, psexec etc.
+        $result = $service.StopService()
+        Test-ServiceResult -operation "Stop service $serviceName on $targetServer" -result $result
+    }
+     
+    "Attempting to uninstall service $serviceName on $targetServer"
+    $result = $service.Delete()
+    Test-ServiceResult -operation "Delete service $serviceName on $targetServer" -result $result   
+}
+
+#Проверки на установку и прочие системные проверки
+function Test-ServiceResult(
+    [string]$operation = $(throw "operation is required"), 
+    [object]$result = $(throw "result is required"), 
+    [switch]$continueOnError = $false)
+{
+    $retVal = -1
+    if ($result.GetType().Name -eq "UInt32") { $retVal = $result } else {$retVal = $result.ReturnValue}
+         
+    if ($retVal -eq 0) {return}
+     
+    $errorcode = 'Success,Not Supported,Access Denied,Dependent Services Running,Invalid Service Control'
+    $errorcode += ',Service Cannot Accept Control, Service Not Active, Service Request Timeout'
+    $errorcode += ',Unknown Failure, Path Not Found, Service Already Running, Service Database Locked'
+    $errorcode += ',Service Dependency Deleted, Service Dependency Failure, Service Disabled'
+    $errorcode += ',Service Logon Failure, Service Marked for Deletion, Service No Thread'
+    $errorcode += ',Status Circular Dependency, Status Duplicate Name, Status Invalid Name'
+    $errorcode += ',Status Invalid Parameter, Status Invalid Service Account, Status Service Exists'
+    $errorcode += ',Service Already Paused'
+    $desc = $errorcode.Split(',')[$retVal]
+     
+    $msg = ("{0} failed with code {1}:{2}" -f $operation, $retVal, $desc)
+     
+    if (!$continueOnError) { Write-Error $msg } else { Write-Warning $msg }        
+}
+#Конец блоки тестирования
+
+#Установка сервиса
+function Install-ServiceNTS(
+    [string]$serviceName = $(throw "serviceName is required"), 
+    [string]$targetServer = $(throw "targetServer is required"),
+    [string]$displayName = "NTSwincash distributor",
+    [string]$physicalPath = "C:\NTSwincash\jbin\DistributorService.exe",
+    #[string]$userName = $(throw "userName is required"),
+    [string]$password = "",
+    [string]$startMode = "Automatic",
+    [string]$description = " ",
+    [bool]$interactWithDesktop = $false
+)
+{
+    # can't use installutil; only for installing services locally
+    #[wmiclass]"Win32_Service" | Get-Member -memberType Method | format-list -property:*    
+    #[wmiclass]"Win32_Service"::Create( ... )        
+          
+    # todo: cleanup this section 
+    $serviceType = 16          # OwnProcess
+    $serviceErrorControl = 1   # UserNotified
+    $loadOrderGroup = $null
+    $loadOrderGroupDepend = $null
+    $dependencies = $null
+     
+    # description?
+    $params = `
+        $serviceName, `
+        $displayName, `
+        $physicalPath, `
+        $serviceType, `
+        $serviceErrorControl, `
+        $startMode, `
+        $interactWithDesktop, `
+        $userName, `
+        $password, `
+        $loadOrderGroup, `
+        $loadOrderGroupDepend, `
+        $dependencies `
+          
+    $scope = new-object System.Management.ManagementScope("\\$targetServer\root\cimv2", `
+        (new-object System.Management.ConnectionOptions))
+    "Connecting to $targetServer"
+    $scope.Connect()
+    $mgt = new-object System.Management.ManagementClass($scope, `
+        (new-object System.Management.ManagementPath("Win32_Service")), `
+        (new-object System.Management.ObjectGetOptions))
+      
+    $op = "service $serviceName ($physicalPath) on $targetServer"    
+    "Installing $op"
+    $result = $mgt.InvokeMethod("Create", $params)    
+    Test-ServiceResult -operation "Install $op" -result $result
+    "Installed $op"
+      
+    "Setting $serviceName description to '$description'"
+    Set-Service -ComputerName $targetServer -Name $serviceName -Description $description
+    "Service install complete"
+}
+#Конец блока установки сервиса.
+
+# Определение Среды VRX [Магазин - Контур Пакет]
+$VRXPACKAGES = @{
+##########################
+# VRX 1
+##########################
+    '166'='1 WS-M0';
+    '279'='1 WS-M0';
+    '105'='1 WS-M1';
+    '660'='1 WS-M1';
+    '024'='1 WS-M2';
+    '050'='1 WS-M2';
+    '175'='1 WS-M3';
+    '180'='1 WS-M4';
+    '061'='1 WS-M4';
+##########################
+# VRX 2
+##########################
+    '134'='2 WS-M0';
+    '465'='2 WS-M0';
+    'A01'='2 WS-M1';
+    '217'='2 WS-M1';
+    '266'='2 WS-M1';
+    '064'='2 WS-M2';
+    '299'='2 WS-M3';
+    '482'='2 WS-M3';
+    '208'='2 WS-M4';
+    '469'='2 WS-M5';
+    '018'='2 WS-M5';
+##########################
+# VRX 3
+##########################
+    '111'='3 WS-M0';
+    '123'='3 WS-M0';
+    '190'='3 WS-M1';
+    '401'='3 WS-M1';
+    '191'='3 WS-M1';
+    '444'='3 WS-M2';
+    '306'='3 WS-M5';
+##########################
+# VRX 4
+##########################
+    '025'='4 WS-M0';
+    '099'='4 WS-M0';
+    '118'='4 WS-M1';
+    '119'='4 WS-M1';
+    '102'='4 WS-M2';
+    '112'='4 WS-M2';
+    '230'='4 WS-M3';
+##########################
+# VRX 5
+##########################
+    '122'='5 WS-M00';
+    '146'='5 WS-M01';
+    '494'='5 WS-M02';
+    '106'='5 WS-M03';
+    '284'='5 WS-M04';
+    '127'='5 WS-M05';
+    '269'='5 WS-M06';
+    '400'='5 WS-M07';
+    '224'='5 WS-M08';
+    '139'='5 WS-M09';
+    '158'='5 WS-M09';
+    '110'='5 WS-M10';
+    '399'='5 WS-M10';
+    '107'='5 WS-M11';
+    '278'='5 WS-M11';
+    '152'='5 WS-M12';
+    '258'='5 WS-M13';
+    '434'='5 WS-M14';
+    '056'='5 WS-M15';
+    '067'='5 WS-M15';
+##########################
+# VRX 6
+##########################
+    '014'='6 WS-M0';
+    '015'='6 WS-M0';
+    '196'='6 WS-M1';
+    '461'='6 WS-M1';
+    '141'='6 WS-M2';
+    '188'='6 WS-M2';
+    '130'='6 WS-M3';
+    '132'='6 WS-M3';
+    '128'='6 WS-M4';
+    '131'='6 WS-M4';
+    '543'='6 WS-M5';
+    '754'='6 WS-M5';
+
+}
+
+# Определение Среды VRQ [Магазин - Контур Пакет]
+$VRQPACKAGES = @{
+##########################
+# VRQ 1
+##########################
+    '111'='1 WS';
+    '123'='1 WS';
+    '105'='1 WS-M0';
+    '166'='1 WS-M0';
+    '279'='1 WS-M0';
+    '190'='1 WS-M0';
+    'A02'='1 WS-M1';
+    '061'='1 WS-M1';
+    '660'='1 WS-M2';
+##########################
+# VRQ 2
+##########################
+    '064'='2 WS';
+    '299'='2 WS';
+    '482'='2 WS';
+    '266'='2 WS-M0';
+    '306'='2 WS-M1';
+    '208'='2 WS-M2';
+    'A01'='2 WS-M3';
+##########################
+# VRQ 3
+##########################
+    '142'='3 WS';
+    '102'='3 WS-M0';
+    '112'='3 WS-M1';
+##########################
+# VRQ 4
+##########################
+    '118'='4 WS-M0';
+    '119'='4 WS-M0';
+    '120'='4 WS-M1';
+##########################
+# VRQ 5
+##########################
+    '217'='5 WS';
+    '230'='5 WS-M0';
+    '235'='5 WS-M0';
+##########################
+# VRQ 6
+##########################
+    '302'='6 WS';
+    '401'='6 WS';
+    '025'='6 WS-M0';
+##########################
+# VRQ 7
+##########################
+    '077'='6 WS';
+    '099'='6 WS';
+    '191'='6 WS-M0';
+    '444'='6 WS-M1';
+    '014'='6 WS-M2';
+    '015'='6 WS-M3';
+}
+# Связка пакета с зоной. (Бесполезная операция)
+$ZONESX = $VRXPACKAGES
+$ZONESQ = $VRQPACKAGES
+
+#Создание и Заполнение DBLINKS 
+$Global:FoboStatus.Text = 'Создание DBLINKS. Ожидайте!'
+Start-Sleep -Seconds 2
+Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
+$XMLNAME =  Get-ChildItem "\\$Server\C$\NTSwincash\config\*" -Include "dblink_V*" 
+$XMLNAME.Name
+[xml]$Doc = New-Object System.Xml.XmlDocument                 
+$FilePath = "\\$Server\C$\NTSwincash\config\dblinks.xml"
+$Path = "\\$Machine\C$\NTSwincash\config\dblinks.xml"
+$Path2 = "\\$Machine\C$\NTSwincash\config\dblinks_MobInv.xml"
+$doc.Load($filePath)
+$doc.linklist.linkref.file = $XMLNAME.name
+$doc.Save($Path)
+$doc.Save($Path2)
+$Global:FoboStatus.Text = 'Копирование ПО!'
+Start-Sleep -Seconds 2
+# Конец блока создания и Копирования DBLINKS.
+
+# - Блок проверки Сервера зоны VRX - Выбор пакета.
+If($Server -like "*vrx*")
+{
+    
+    foreach($T in $ZONESX.Keys)
+    {
+        #Write-Host $T
+        if($Server -like "*"+$T)
+        {
+            $PacKet = $ZONESX.$T
+            $PacKet = $PacKet.remove(0,2)
+            $STR = $ZONESX.$T
+            $T = "fobo-vrx-ajb" +  $STR[0]
+            $Source = "\\$T\C$\EtalonR3\$PacKet"
+            #Invoke-Item $Source
+            #Copy-Item -Path $Source\* -Destination \\$Machine\c$\NTSwincash -Recurse -PassThru
+            # Копирование с использованием джоба.
+            $Copy = [scriptblock]::create("Copy-Item -Path $Source\* -Destination \\$Machine\c$\NTSwincash -Recurse -PassThru")
+            Start-Job -scriptblock $Copy
+
+        }
+    }
+
+}
+# - Блок проверки Сервера зоны VRQ - Выбор пакета.
+elseif($Server -like "*vrq*")
+{
+    foreach($T in $ZONESQ.Keys)
+    {
+        #Write-Host $T
+        if($Server -like "*"+$T)
+        {
+            $PacKet = $ZONESQ.$T
+            $PacKet = $PacKet.remove(0,2)
+            Write-Host "ВЫБРАН ПАКЕТ: "$PacKet
+            $STR = $ZONESQ.$T
+            $T = "fobo-vrq-ajb" +  $STR[0]
+            Write-Host "ВЫБРАН СЕРВЕР: "$T
+            $Source = "\\$T\C$\EtalonR3\$PacKet"
+            $Copy = [scriptblock]::create("Copy-Item -Path $Source\* -Destination \\$Machine\c$\NTSwincash -Recurse -PassThru")
+            Start-Job -scriptblock $Copy
+
+        }
+    }
+
+
+}
+
+    $Global:FoboStatus.Text = 'Запущена процедура установки службы!'
+    Start-Sleep -Seconds 5
+    $Service = "NTSwincash distributor"
+    $StatusNTS = $null
+    $StatusNTS = Get-ServiceNTS $Service $Machine
+if($StatusNTS -eq $null)
+{
+    #Write-Host "Сервиса нет!"
+    #[System.Windows.Forms.MessageBox]::Show("Будет выполнена установка сервиса!","NTS","OK")
+    Install-ServiceNTS $Service $Machine
+    Start-Sleep -Seconds 5
+    $StatusNTS = $null
+    $StatusNts = Get-ServiceNTS $Service $Machine
+    if($StatusNTS -ne $null)
+    {
+           $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
+           $Global:FoboStatus.ForeColor = 'Green'
+    }
+    else
+    {
+           $Global:FoboStatus.Text = 'Служба не установлена!'
+           $Global:FoboStatus.ForeColor = 'Red'
+    }
+}
+else
+{
+    $Global:FoboStatus.Text = 'Служба уже установлена!'
+    Start-Sleep -Seconds 6
+    $Global:FoboStatus.Text = "Установка выполнена!"
+ 
+}
+
+#End of Function
+}
+###############################
+# END FUNCTION FOR WMI        #
+###############################
+
+
+
+
             $TPath = Test-Path \\$Machine\C$\NTSwincash\config
             $TPath2 = Test-Path \\$Machine\C$\NTSwincash\jbin
             $Global:FoboStatus.Text = 'Выполняются проверки. Ожидайте'
@@ -569,75 +957,23 @@ Function DEPLOYFOBO([string]$Machine, [string]$Server){
                     $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
                     $ACL.SetAccessRule($AccessRule)
                     $ACL | Set-Acl $FolderAcl
-
-                    #Копирование файлов на удаленную машину DBLINK и JBIN
-                    $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
-                    Start-Sleep -Seconds 2
-                    Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
-                    $XMLNAME =  Get-ChildItem "\\$Server\C$\NTSwincash\config\*" -Include "dblink_V*" 
-                    $XMLNAME.Name
-                    [xml]$Doc = New-Object System.Xml.XmlDocument                 
-                    $FilePath = "\\$Server\C$\NTSwincash\config\dblinks.xml"
-                    $Path = "\\$Machine\C$\NTSwincash\config\dblinks.xml"
-                    $Path2 = "\\$Machine\C$\NTSwincash\config\dblinks_MobInv.xml"
-                    $doc.Load($filePath)
-                    $doc.linklist.linkref.file = $XMLNAME.name
-                    $doc.Save($Path)
-                    $doc.Save($Path2)
-                    $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
-                    Start-Sleep -Seconds 2
-                    xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
-                    $Global:FoboStatus.Text = 'Копирование Завершено!'
-                    Start-Sleep -Seconds 2       
-                    #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
-                    $Global:FoboStatus.Text = 'Выполняется установка службы!'
-                    $PS = Test-Path C:\Windows\System32\PsExec.exe
-                        if($PS -eq $True)
-                        {
-                            psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
-                        }
-                        else
-                        {
-                            $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
-                            switch($PSEXEC)
-                            {
-                            "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
-                                  #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
-                            "NO" {return}
-                            "CANCEL" {return}
-                            }
-                            return  
-                        }
-            
-                            if(Get-Service -Name "NTSwincash distributor")
-                            {
-                                $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
-                                #[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
-                                #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
-                                #start 'C:\NTSwincash\jbin\Configurator.exe'
-                                (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
-
-                            }
-                            else
-                            {
-                                [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
-                                (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*r.exe'").terminate() | Out-Null
-                            }
-                            }
-                elseif ($TPath -eq $True)
-                {
+                    INSTALL_FOBO_NEW $SERVER $Machine
+            }
+            elseif ($TPath -eq $True)
+            {
                     $Answer = [System.Windows.Forms.MessageBox]::Show("FOBO уже установлен на ПК
 Выполнить переустановку?","Ошибка",'YesNoCancel','Warning')
                     switch($Answer)
                     {
                         "YES"{
-                                psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /stop
-                                start-sleep -seconds 2
                                 (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+                                $Service = "NTSwincash distributor"
+                                Uninstall-ServiceNTS $Service $Machine
+                                start-sleep -seconds 2
                                 $Global:FoboStatus.Text = 'Выполняется удаление старой папки! Ожидайте!'
                                 Start-Sleep -Seconds 2 
                                 Remove-Item -Path \\$machine\C$\NTSwincash -Recurse -ErrorAction SilentlyContinue | Out-Null
-                                Start-Sleep -Seconds 20
+                                Start-Sleep -Seconds 15
                                 New-Item -ItemType Directory -Path \\$Machine\C$\NTSwincash\jbin
                                 New-Item -ItemType Directory  -Path \\$Machine\C$\NTSwincash\config
                                 $ACL = ''
@@ -646,63 +982,10 @@ Function DEPLOYFOBO([string]$Machine, [string]$Server){
                                 $AccessRule =  New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Пользователи","modify","Containerinherit, ObjectInherit","None","Allow")
                                 $ACL.SetAccessRule($AccessRule)
                                 $ACL | Set-Acl $FolderAcl
+                                INSTALL_FOBO_NEW $SERVER $Machine
 
-                                #Копирование файлов на удаленную машину DBLINK и JBIN
-                                $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
-                                Start-Sleep -Seconds 2
-                                Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
-                                $XMLNAME =  Get-ChildItem "\\$Server\C$\NTSwincash\config\*" -Include "dblink_V*" 
-                                $XMLNAME.Name
-                                [xml]$Doc = New-Object System.Xml.XmlDocument                 
-                                $FilePath = "\\$Server\C$\NTSwincash\config\dblinks.xml"
-                                $Path = "\\$Machine\C$\NTSwincash\config\dblinks.xml"
-                                $Path2 = "\\$Machine\C$\NTSwincash\config\dblinks_MobInv.xml"
-                                $doc.Load($filePath)
-                                $doc.linklist.linkref.file = $XMLNAME.name
-                                $doc.Save($Path)
-                                $doc.Save($Path2)
-                                $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
-                                Start-Sleep -Seconds 2
-                                xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
-                                $Global:FoboStatus.Text = 'Копирование Завершено!'
-                                Start-Sleep -Seconds 2       
-                                #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
-                                $Global:FoboStatus.Text = 'Выполняется установка службы!'
-                                $PS = Test-Path C:\Windows\System32\PsExec.exe
-                                    if($PS -eq $True)
-                                    {
-                                        psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
-                                    }
-                                    else
-                                    {
-                                        $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
-                                        switch($PSEXEC)
-                                    {
-                                        "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
-                                        #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
-                                        "NO" {return}
-                                        "CANCEL" {return}
-                                    }
-                                    return  
-                                    }
-            
-                                    if(Get-Service -Name "NTSwincash distributor")
-                                    {
-                                        $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
-                                        $Global:FoboStatus.ForeColor = 'Green'
-                                        #[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
-                                        #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
-                                        #start 'C:\NTSwincash\jbin\Configurator.exe'
-                                        (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
-                                    }
-                                    else
-                                    {
-                                        $Global:FoboStatus.Text = 'Ошибка установки службы!'
-                                        $Global:FoboStatus.ForeColor = 'RED'
-                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
-                                        (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
-                                    }
-                
+
+                                
                                }
                     "NO"{return}
                     "CANCEL"{return}
@@ -718,27 +1001,26 @@ Function FOBO_INSTALL([string]$Server)
 
     #Create FOBO FORM
     $Fobo_Form = New-Object System.Windows.Forms.Form
-    $Fobo_Form.SizeGripStyle = "Hide"
     $Fobo_Form.BackgroundImage = $Image
     $Fobo_Form.BackgroundImageLayout = "None"
-    if($Image -eq $null)
+    if($Image -ne $null)
     {
-    $Fobo_Form.Size = ('350,247')
+    $Fobo_Form.Size = ('350,255')
     }
     else{
-    $Fobo_Form.Width = $Image.Width
-    $Fobo_Form.Height = $Image.Height
+    $Fobo_Form.Size = ('350','255')
+    #$Fobo_Form.Width = 
+    #$Fobo_Form.Height = "500"
     }
     
     $Fobo_Form.StartPosition = "CenterScreen"
     $Fobo_Form.TopMost = $true
     $Fobo_Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
     $Fobo_Form.Text = "Окно установки FOBO"
-    $Fobo_Form.TopMost = $True
     $Fobo_Form.Icon = $Icon
 
     $Global:FoboStatus = New-Object System.Windows.Forms.Label
-    $Global:FoboStatus.Location = New-Object System.Drawing.Point('10','93')
+    $Global:FoboStatus.Location = New-Object System.Drawing.Point('10','96')
     $Global:FoboStatus.Text = 'ЗДЕСЬ БУДЕТ СТАТУС ВЫПОЛНЕНИЯ РАБОТЫ!'
     $Global:FoboStatus.AutoSize = $True
     #$Global:FoboStatus.BackColor = 'Transparent'
@@ -771,13 +1053,12 @@ Function FOBO_INSTALL([string]$Server)
     $FoboProcess = New-Object System.Windows.Forms.Button
     $FoboProcess.Location = New-Object System.Drawing.Point('10','70')
     $FoboProcess.Size = '250,25'
-    $FoboProcess.Text = 'ПГНАЛИ'
+    $FoboProcess.Text = 'Запустить установку!'
 
 #Кнопка запуска процесса пакетного выполнения.
     $FoboProcess1 = New-Object System.Windows.Forms.Button
     $FoboProcess1.Location = New-Object System.Drawing.Point('215','70')
-    $FoboProcess1.Text = 'ПГНАЛИ'
-
+    $FoboProcess1.Text = 'Запустить установку!'
 
     $FoboFile = New-Object System.Windows.Forms.Button
     $FoboFile.Location = New-Object System.Drawing.Point('215','40')
@@ -800,7 +1081,7 @@ Function FOBO_INSTALL([string]$Server)
         {
             $Fobo_Form.Width = '300'
             $FoboStatus.Visible = $True
-            $Fobo_Form.Height = '150'
+            $Fobo_Form.Height = '160'
             $FoboProcess.Visible = $True
             $FoboProcess1.Visible = $False
             $FoboFile.Visible = $False
@@ -2060,7 +2341,7 @@ $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
 $objForm.SizeGripStyle = "Hide"
 $objForm.BackgroundImage = $Image
 $objForm.BackgroundImageLayout = "None"
-$objForm.Text = "Программа для безумного управления сервисами V1.8"
+$objForm.Text = "Программа для безумного управления сервисами V1.9"
 $objForm.StartPosition = "CenterScreen"
 $objForm.Height = '370'
     if($Image -eq $null){
@@ -2354,7 +2635,7 @@ $FoboButton = New-Object System.Windows.Forms.Button
 $FoboButton.Location = New-Object System.Drawing.Size(225,300)
 $FoboButton.Size = New-Object System.Drawing.Size(140,24)
 $FoboButton.Font = $Font
-$FoboButton.Text = "FOBO INSTALL (Beta)"
+$FoboButton.Text = "FOBO INSTALL V1.0"
 
 $FoboButton.Add_Click({
 
@@ -2550,3 +2831,60 @@ $Server = "C:\1\"
     $_.graphics.drawstring($ServiceNTSState.Status,(new-object System.Drawing.Font("times new roman",11,[System.Drawing.FontStyle]::Bold)),$brush2,(new-object system.drawing.pointf(20,3)))
     })
     #>
+
+#Копирование файлов на удаленную машину DBLINK и JBIN
+                               <# $Global:FoboStatus.Text = 'Выполняется копирование DBLINKS. Ожидайте!'
+                                Start-Sleep -Seconds 2
+                                Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
+                                $XMLNAME =  Get-ChildItem "\\$Server\C$\NTSwincash\config\*" -Include "dblink_V*" 
+                                $XMLNAME.Name
+                                [xml]$Doc = New-Object System.Xml.XmlDocument                 
+                                $FilePath = "\\$Server\C$\NTSwincash\config\dblinks.xml"
+                                $Path = "\\$Machine\C$\NTSwincash\config\dblinks.xml"
+                                $Path2 = "\\$Machine\C$\NTSwincash\config\dblinks_MobInv.xml"
+                                $doc.Load($filePath)
+                                $doc.linklist.linkref.file = $XMLNAME.name
+                                $doc.Save($Path)
+                                $doc.Save($Path2)
+                                $Global:FoboStatus.Text = 'Выполняется копирование Jbin. Ожидайте!'
+                                Start-Sleep -Seconds 2
+                                xcopy "\\dubovenko\D\SOFT\Fobo\jbin" "\\$Machine\C$\NTSWincash\jbin" /S /E /d
+                                $Global:FoboStatus.Text = 'Копирование Завершено!'
+                                Start-Sleep -Seconds 2       
+                                #Invoke-Command -ComputerName $Machine {cmd.exe "/c start C:\NTSWincash\jbin\InstallDistributor-NT.bat"}
+                                $Global:FoboStatus.Text = 'Выполняется установка службы!'
+                                $PS = Test-Path C:\Windows\System32\PsExec.exe
+                                    if($PS -eq $True)
+                                    {
+                                        psexec -d \\$machine cmd /c "C:\NTSwincash\jbin\NTSWincash Service Installer.exe" DistributorService /install
+                                    }
+                                    else
+                                    {
+                                        $PSEXEC = [System.Windows.Forms.MessageBox]::Show("Не установлен PSEXEC!!!","PSexec","YesNoCancel")
+                                        switch($PSEXEC)
+                                    {
+                                        "YES"{[System.Windows.Forms.MessageBox]::Show("Поиск решения корректной установки")}
+                                        #xcopy "\\dubovenko\D\SOFT\PSEXEC\" "C:\Windows\System32"}
+                                        "NO" {return}
+                                        "CANCEL" {return}
+                                    }
+                                    return  
+                                    }
+            
+                                    if(Get-Service -Name "NTSwincash distributor")
+                                    {
+                                        $Global:FoboStatus.Text = 'Служба установлена! Установка завершена'
+                                        $Global:FoboStatus.ForeColor = 'Green'
+                                        #[System.Windows.Forms.MessageBox]::Show("Служба NTSWincash успешно установлена","Успех",'OK','INFO')
+                                        #psexec -d \\$machine cmd /c 'C:\NTSwincash\jbin\Configurator.exe'
+                                        #start 'C:\NTSwincash\jbin\Configurator.exe'
+                                        (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+                                    }
+                                    else
+                                    {
+                                        $Global:FoboStatus.Text = 'Ошибка установки службы!'
+                                        $Global:FoboStatus.ForeColor = 'RED'
+                                        [System.Windows.Forms.MessageBox]::Show("Служба NTSWincash не была установлена!","Ошибка",'OK','ERROR')
+                                        (Get-WmiObject -Class Win32_Process -ComputerName $Machine -Filter "name='NTSWincash*.exe'").terminate() | Out-Null
+                                    }
+                                  #>

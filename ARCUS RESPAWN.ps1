@@ -222,10 +222,9 @@
 "FOBO-WS-TST-022",
 "Autotest1"
 
-$SOLO = 'FOBO-WS-TST-037',
-"FOBO-WS-TST-009"
+$SOLO = 'gorbushina2'
 
-foreach ($S in $Server)
+foreach ($S in $SOLO)
 {
 if(Test-Path "\\$S\c$\Arcus2")
 {
