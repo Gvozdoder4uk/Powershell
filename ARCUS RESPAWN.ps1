@@ -222,7 +222,7 @@
 "FOBO-WS-TST-022",
 "Autotest1"
 
-$SOLO = 'gorbushina2'
+$SOLO = 'gorbushina1'
 
 foreach ($S in $SOLO)
 {
@@ -234,6 +234,7 @@ if(Test-Path "\\$S\c$\Arcus2")
     {
     (Get-WmiObject -Class Win32_Process -ComputerName $S -Filter "name='sales.exe'").terminate()
     "SALES остановлен на :  " + $T.__SERVER | Out-File C:\1\Cassa.txt -Append
+    #Копирует файлы из папки C:\1\Arcus2
     Copy-Item C:\1\Arcus2 -Destination "\\$S\C$\"  -Recurse -Force
     "Установка обновления на $S выполнена." | Out-File C:\1\Cassa.txt -Append
     }

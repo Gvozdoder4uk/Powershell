@@ -828,7 +828,8 @@ $VRQPACKAGES = @{
 $ZONESX = $VRXPACKAGES
 $ZONESQ = $VRQPACKAGES
 
-#Создание и Заполнение DBLINKS 
+#Создание и Заполнение DBLINKS
+#===============================================================================================================
 $Global:FoboStatus.Text = 'Создание DBLINKS. Ожидайте!'
 Start-Sleep -Seconds 2
 Copy-Item "\\$Server\C$\NTSwincash\config\*" -Filter 'dblink_*' -Destination "\\$Machine\C$\NTSwincash\config\"
@@ -842,10 +843,13 @@ $doc.Load($filePath)
 $doc.linklist.linkref.file = $XMLNAME.name
 $doc.Save($Path)
 $doc.Save($Path2)
+# Конец блока создания и Копирования DBLINKS.
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-==-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=--=
+#
 $Global:FoboStatus.Text = 'Копирование ПО!'
 Start-Sleep -Seconds 2
-# Конец блока создания и Копирования DBLINKS.
 
+#
 # - Блок проверки Сервера зоны VRX - Выбор пакета.
 If($Server -like "*vrx*")
 {
@@ -864,7 +868,9 @@ If($Server -like "*vrx*")
             #Copy-Item -Path $Source\* -Destination \\$Machine\c$\NTSwincash -Recurse -PassThru
             # Копирование с использованием джоба.
             $Copy = [scriptblock]::create("Copy-Item -Path $Source\* -Destination \\$Machine\c$\NTSwincash -Recurse -PassThru")
-            Start-Job -scriptblock $Copy
+            Start-Job -Name "COPYFOBO" -scriptblock $Copy  
+            Wait-Job -Name "COPYFOBO"
+            
 
         }
     }
@@ -886,7 +892,8 @@ elseif($Server -like "*vrq*")
             Write-Host "ВЫБРАН СЕРВЕР: "$T
             $Source = "\\$T\C$\EtalonR3\$PacKet"
             $Copy = [scriptblock]::create("Copy-Item -Path $Source\* -Destination \\$Machine\c$\NTSwincash -Recurse -PassThru")
-            Start-Job -scriptblock $Copy
+            Start-Job -Name "COPYFOBO" -scriptblock $Copy  
+            Wait-Job -Name "COPYFOBO"
 
         }
     }
@@ -894,8 +901,9 @@ elseif($Server -like "*vrq*")
 
 }
 
+
     $Global:FoboStatus.Text = 'Запущена процедура установки службы!'
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 3
     $Service = "NTSwincash distributor"
     $StatusNTS = $null
     $StatusNTS = Get-ServiceNTS $Service $Machine
@@ -1788,7 +1796,7 @@ Function CHECK_SETTINGS(){
 
 
     #Проверка ввода.
-    if($MACHINE -eq 'Введите магазин' -or $Machine -eq '')
+    if($MACHINE -eq 'Введите магазин' -or $Machine -eq '' -or ($MACHINE.Length -lt 3 -and $CONT -like "a"))
     {
       [System.Windows.Forms.MessageBox]::Show('Обнаружена ошибка выбора станции. Повторите ввод!',"Ошибка выбора",'RetryCancel','ERROR')
       return
@@ -2550,12 +2558,19 @@ $RestartButton.Add_Click(
 {
     $Answer = CHECK_SETTINGS
     switch($Answer){
-        "YES"{ if($Server -like '*int*')
-               { KillWildfly($SERVER) }
+        "YES"{ 
+                
+               if($Server -like '*int*')
+               { 
+                KillWildfly($SERVER) 
+               }
                else{
-               RELEASE_WINDOW
-               if($QA -eq "2")
-               { return }
+
+                    RELEASE_WINDOW
+                        if($QA -eq "2")
+                        { 
+                        return 
+                        }
                elseif($QA -eq "1")
                {
                KillWildfly($SERVER)
