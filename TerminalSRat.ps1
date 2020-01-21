@@ -144,34 +144,41 @@ $MainForm.TopMost = $True
 $MainForm.Icon = $Icon
 
 $ProgLabel = New-Object System.Windows.Forms.Label
-$ProgLabel.Location = ('40,0')
+$ProgLabel.Location = ('40,5')
 $ProgLabel.AutoSize = $true
 $ProgLabel.Text = "ПО Для перезагрузки ETRAN"
-$ProgLabel.Font = $FontTerminalBold
+$ProgLabel.Font = $Font
 $ProgLabel.BackColor = "Transparent"
 #Combo Box Servers
 
 $ComboLabel = New-Object System.Windows.Forms.Label
-$ComboLabel.Text = "Список Терминальных Серверов:"
-$ComboLabel.Location = ('20,30')
+$ComboLabel.Text = "Список Терминальных Серверов"
+$ComboLabel.Location = ('35,30')
 $ComboLabel.AutoSize = $true
 $ComboLabel.BackColor = "Transparent"
-$ComboLabel.Font = $FontTerminalBold
+$ComboLabel.Font = $Font
 
 
 $ComboTerminal = New-Object System.Windows.Forms.ComboBox
-$ComboTerminal.Location = ('20,50')
+$ComboTerminal.Location = ('40,50')
 $ComboTerminal.Size = ('170,30')
 $ComboTerminal.DataSource = $Global:ServerList
 $ComboTerminal.DropDownStyle = "DropDownList"
 $ComboTerminal.Font = $FontTerminal
+$ComboTerminal.SelectionStart = 0
+$ComboTerminal.SelectionLength = 0
 
+$ComboTerminal.Add_SelectedIndexChanged({
+
+    $TerminalButton.Focus()
+})
 
 $TerminalButton = New-Object System.Windows.Forms.Button
 $TerminalButton.Location = ('20,80')
 $TerminalButton.AutoSize = $true
 $TerminalButton.Text = "Reload ETRAN"
-$TerminalButton.Font = $Font
+$TerminalButton.Font = $FontTerminal
+$TerminalButton.Focus()
 
 $TerminalButton.Add_Click({
     $Checked = CheckServer
@@ -187,11 +194,15 @@ $TerminalButton2 = New-Object System.Windows.Forms.Button
 $TerminalButton2.Location = ('120,80')
 $TerminalButton2.AutoSize = $true
 $TerminalButton2.Text = "Reload ALL ETRAN"
-$TerminalButton2.Font = $Font
+$TerminalButton2.Font = $FontTerminal
 
+$TerminalButton.add_MouseHover({ENTERCOLOR($TerminalButton)})
+$TerminalButton.add_MouseLeave({LEAVECOLOR($TerminalButton)})
 
+$TerminalButton2.add_MouseHover({ENTERCOLOR($TerminalButton2)})
+$TerminalButton2.add_MouseLeave({LEAVECOLOR($TerminalButton2)})
 
-
+$TerminalButton.Focus()
 $MainForm.Controls.AddRange(@($ComboTerminal,$ComboLabel,$ProgLabel,$TerminalButton,$TerminalButton2))
 $MainForm.ShowDialog()
 
