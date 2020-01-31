@@ -12,10 +12,20 @@ import-module ActiveDirectory
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "W00-02*"}  -Properties Description |
-Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\AllComputers.csv  -Encoding UTF8
+#Get-ADComputer -Filter {Name -Like "W00-*"}  -Properties Description |
+#Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
+#Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\AllComputers.csv  -Encoding UTF8
 
+# Инициализация Конфигурационного Файла:
+$Config_File = "C:\Test\cfg.ini"
+Get-Content $Config_File| foreach-object -begin {$START=@{}} -process { $k = [regex]::split($_,'='); if(($k[0].CompareTo("") -ne 0) -and ($k[0].StartsWith("[") -ne $True)) { $START.Add($k[0], $k[1]) } }
+$Configuration_Start = $START.Programm_Mode
+
+
+Write-Host "Инициализирован режим программы "$Configuration_Start
+
+if($Configuration_Start -eq 0)
+{
 
 # Созадём объект Excel
 $Excel = New-Object -ComObject Excel.Application
@@ -104,18 +114,55 @@ $InventoryFile.Cells.Item(1,25) = 'Объем памяти (MB)'
 #$InventoryFile.Cells.Item(2,23) = 'Сетевая карта'
 #$InventoryFile.Cells.Item(2,24) = 'MAC Адрес'
 $Range = $InventoryFile.Range("A1","Y1")
+$Range.AutoFilter() | Out-Null
 $Range.Interior.ColorIndex = 15
 
 $InventoryFile.Name = 'Инвентаризация ЦО'
 # Выделяем жирным шапку таблицы
 $InventoryFile.Rows.Item(1).Font.Bold = $true
 
-
+# Определение стратовой площадки записи в файл.
 $Row = 2
 $Column = 1
 $BadColumn = 1
 $BadRow = 2
 $InitialRow = 2
+
+
+}
+elseif($Configuration_Start -eq 1)
+{
+    $FilePath = "C:\Test\MyExcel.xlsx"
+
+    $Excel = New-Object -ComObject Excel.Application
+    $Excel.Visible = $true
+    $Workbooks = $Excel.Workbooks.Open($FilePath)
+    
+#Main Window CO
+$InventoryFile = $WorkBooks.Worksheets.Item(1)
+$Range = $InventoryFile.Range("A1","Y1")
+$Range.AutoFilter() | Out-Null
+
+#Bad_PC
+$Bad_PC  = $WorkBook.Worksheets.Item(2)
+
+$UsedRangeMain = $InventoryFile.UsedRange
+$Row_New = $UsedRangeMain.Rows.Count
+
+$UsedRangeBad = $Bad_PC.UsedRange
+$RowBad_New = $UsedRangeBad.Rows.Count
+
+$Row = $Row_new+1
+$Column = 1
+$BadColumn = $RowBad_New+1
+$BadRow = 2
+$InitialRow = $Row_new+1
+
+
+}
+
+
+
 
 $ImportCsv = import-csv c:\Test\AllComputers.csv
 
@@ -132,6 +179,13 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         Write-Host "$A PC - Доступен!" -ForegroundColor Cyan
         Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер" | Out-File C:\Test\Comp\$a.txt
         #Запись имени пользователя и имени ПК
+        if($Configuration_Start -eq 0)
+        {
+            $InventoryFile.Cells.Item($Row, $Column) = $b
+            #$Range = $InventoryFile.Range("B"+$Row,"Y"+$Row)
+            #$Range.Merge()
+        $Row++
+        }
         $InventoryFile.Cells.Item($Row, $Column) = $b
         $Column++
         $InventoryFile.Cells.Item($Row, $Column) = $a
@@ -310,6 +364,15 @@ else
 
 }
 #>
+
+$Range_Current = $InventoryFile.Range("B"+$Row,"Y"+$Row)
+$Range_Current.font.ColorIndex = 10
+#$Range_Current.copy()
+
+#Range_Previous = $InventoryFile.Range("B"+($Row-1).ToString(),"Y"+($Row-1).ToString())
+#$InventoryFile.Paste($Range_Previous)
+
+
 $Row++
 $RowFinish = $Row
 $Column = 1
@@ -344,34 +407,64 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 
 
-
 $Row--
-$DataRangeInventory = $InventoryFile.Range(("A{0}" -f $InitialRow), ("Y{0}" -f $Row))
+$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("Y{0}" -f $Row))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
     $DataRangeInventory.Borders.Item($_).Weight = 2
 }
 
-
 #Последняя строка файла 
 $Filler = [System.Type]::Missing
 $UsedRange = $InventoryFile.UsedRange
 $UsedRange.EntireColumn.AutoFit() | Out-Null
 $T = "A" + $UsedRange.Rows.Count
-$Sorting_Space = $InventoryFile.range("A3:$T" )
-$Sorting_Space.Select()
-$UsedRange.Sort($Sorting_Space,2,$Filler,$Filler,$Filler,$Filler,$Filler,1)
+$Sorting_Space = $InventoryFile.range("A2:$T" )
+#$Sorting_Space.Select()
+$UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 
 
 $UsedBadRange = $Bad_PC.UsedRange
 $UsedBadRange.EntireColumn.AutoFit() | Out-Null
 
-$WorkBook.SaveAs("C:\Test\MyExcel_$Current_Date.xlsx")
+$WorkBook.SaveAs("C:\Test\MyExcel.xlsx")
 $InventoryFile
 
-#if ((Get-WmiObject -computername $a Win32_OperatingSystem) -eq $null)
-#{
-#Write-Host "$a Не определена ОС"
-#}
+#Блок проверки поступивших данных и удаление совпадающих.
+
+$Work_Range = $InventoryFile.UsedRange
+#$Work_Range.Rows
+
+foreach($Name in $Work_Range.Rows)
+{
+    $Test = $Name.Row -as [int]
+    #$Test
+    $Username = $InventoryFile.Cells.Item($Test,1).Formula
+
+    if($InventoryFile.Cells.Item($Test,1).Formula -eq $InventoryFile.Cells.Item($Test+1,1).Formula -and ($InventoryFile.Cells.Item($Test,1).Formula -ne "" -or $InventoryFile.Cells.Item($Test+1,1).Formula -ne ""))
+    {
+          #$Grep = $InventoryFile.Rows($Test+1)
+          #$Grep_Current = $InventoryFile.Rows($Test)
+          Write-Host $Username
+          Write-host $Name.Row
+          $Next = $Test+1
+          $Grep_Current = $InventoryFile.Range("D"+$Test,"Y"+$Test)
+          $Grep = $InventoryFile.Range("D"+$Next,"Y"+$Next)
+          $TESTGREP = $Grep_Current.Value2 -eq $Grep.Value2
+          if($Grep_Current.Value2 -eq $Grep.Value2)
+          {
+            Write-Host "Удалена Строка "$Grep.Row
+            $Grep.Delete()
+          }
+          elseif($Grep_Current.Value2 -ne $Grep.Value2)
+          {
+            Write-Host "Строки не равны!!!!"
+          }
+          else
+          {
+            Write-Host "ШТА?"
+          }  
+    }
+}
 
