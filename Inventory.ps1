@@ -36,51 +36,105 @@ $Excel.Visible = $true
 # Добавляем рабочую книгу
 $WorkBook = $Excel.Workbooks.Add()
 
+
+# Определение стратовой площадки записи в файл.
+$Row = 2
+$Column = 1
+$BadColumn = 1
+$BadRow = 2
+$InitialRow = 2
+$Initial_BadRow = 2
+
 #Страница необработанных ПК
 $Bad_PC = $Excel.Worksheets.Add()
 $Bad_PC  = $WorkBook.Worksheets.Item(2)
 $Bad_PC.Name = "Недоступные ПК"
 
-<#$Bad_PC.Cells.Item(1,1) = 'Необработанные ПК'
-$Bad_PC.Cells.Item(1,1).Font.Size = 12
-$Bad_PC.Cells.Item(1,1).Font.Bold = $true
-$Bad_PC.Cells.Item(1,1).Font.ThemeFont = 1
-$Bad_PC.Cells.Item(1,1).Font.ThemeColor = 4
-$Bad_PC.Cells.Item(1,1).Font.ColorIndex = 15
-$Bad_PC.Cells.Item(1,1).Font.Color = 8210719
-$Bad_PC.Rows.Item(1).HorizontalAlignment = -4108
-$Bad_PC.Rows.Item(2).HorizontalAlignment = -4108
-$Range = $Bad_PC.Range('A1','C1')
-$Range.Merge()
-#>
-
-$Bad_PC.Cells.Item(2,1) = 'Имя Пользователя'
-$Bad_PC.Cells.Item(2,2) = 'Сетевое имя'
-$Range = $Bad_pc.Range("A2","B2")
+$Bad_PC.Cells.Item(1,1) = 'Имя Пользователя'
+$Bad_PC.Cells.Item(1,2) = 'Сетевое имя'
+$Bad_PC.Cells.Item(1,3) = 'Статус'
+$Bad_PC.Cells.Item(1,4) = 'Дата Потери Соединения'
+$Bad_PC.Cells.Item(1,5) = 'Дата Восстановления'
+$Bad_PC.Cells.Item(1,6) = 'Дата Сканирования'
+$Bad_PC.Cells.Item(1,7) = 'Недоступен (Дней)'
+$Bad_PC.Columns.Item('D').HorizontalAlignment = -4108
+$Bad_PC.Columns.Item('E').HorizontalAlignment = -4108
+$Bad_PC.Columns.Item('G').HorizontalAlignment = -4108
+$Range = $Bad_PC.Range("A1","G1")
+$Range.AutoFilter() | Out-Null
 $Range.Interior.ColorIndex = 15
-$Bad_PC.Rows.Item(2).Font.Bold = $true
+$Bad_PC.Rows.Item(1).Font.Bold = $true
+$Bad_PC.Rows.Item(1).WrapText = $true
 $Bad_PC.Rows.Item(1).HorizontalAlignment = -4108
+
+
+#Страница Изменений
+$Change_History = $Excel.Worksheets.Add()
+$Change_History  = $WorkBook.Worksheets.Item(2)
+$Change_History.Name = "История Изменений ЦО"
+
+$Change_History.columns.item('i').NumberFormat = "@"
+$Change_History.Rows.Item(1).HorizontalAlignment = -4108
+$Change_History.Cells.Item(1,1) = 'Имя Пользователя'
+$Change_History.Cells.Item(1,2) = 'Сетевое имя'
+$Change_History.Cells.Item(1,3) = 'Дата Проверки'
+$Change_History.Cells.Item(1,4) = 'OS'
+$Change_History.Cells.Item(1,5) = 'Процессор'
+$Change_History.Cells.Item(1,6) = 'Модель'
+$Change_History.Cells.Item(1,7) = 'Материнская плата'
+$Change_History.Cells.Item(1,8) = 'Модель'
+$Change_History.Cells.Item(1,9) = 'Серийный номер'
+#Column HDD Start 8
+$Change_History.Cells.Item(1,10) = 'HDD 1'
+$Change_History.Cells.Item(1,11) = 'HDD 2'
+$Change_History.Cells.Item(1,12) = 'HDD 3'
+$Change_History.Cells.Item(1,13) = 'HDD 4'
+#$Change_History.Cells.Item(1,9) = 'Объем (Гб)'
+#Column OZY START 14
+$Change_History.Cells.Item(1,14) = 'Суммарно ОЗУ (Гб)'
+$Change_History.Cells.Item(1,15) = 'Тип Памяти'
+$Change_History.Cells.Item(1,16) = 'ОЗУ 1 (ГБ)'
+$Change_History.Cells.Item(1,17) = 'ОЗУ 2 (ГБ)'
+$Change_History.Cells.Item(1,18) = 'ОЗУ 3 (ГБ)'
+$Change_History.Cells.Item(1,19) = 'ОЗУ 4 (ГБ)'
+# Column Video Start 20
+$Change_History.Cells.Item(1,20) = 'Видеокарта 1'
+$Change_History.Cells.Item(1,21) = 'Объем памяти (MB)'
+$Change_History.Cells.Item(1,22) = 'Видеокарта 2'
+$Change_History.Cells.Item(1,23) = 'Объем памяти (MB)'
+$Change_History.Cells.Item(1,24) = 'Видеокарта 3'
+$Change_History.Cells.Item(1,25) = 'Объем памяти (MB)'
+$Change_History.Cells.Item(1,25) = 'Видеокарта 3'
+$Change_History.Cells.Item(1,26) = 'Объем памяти (MB)'
+#Column Network Start
+$Change_History.Cells.Item(1,27) = 'Cетевая Карта 1'
+$Change_History.Cells.Item(1,28) = 'MAC'
+$Change_History.Cells.Item(1,29) = 'Cетевая Карта 2'
+$Change_History.Cells.Item(1,30) = 'MAC'
+$Change_History.Cells.Item(1,33) = 'Cетевая Карта 4'
+$Change_History.Cells.Item(1,34) = 'MAC'
+#Column Availabilyty  33
+$Change_History.Cells.Item(1,35) = 'Недоступен (День)'
+$Change_History.Cells.Item(1,36) = 'Дата Обнаружения'
+
+
+$Range = $Change_History.Range("A1","AJ1")
+$Range.AutoFilter() | Out-Null
+$Range.Interior.ColorIndex = 15
+
+$Row_Change = 2
+$Column_Change = 1
+$Initial_Change_Row = 2
+
+
 
 #Основная инвентаризационная страница ЦО
-<#
-
-$InventoryFile.Name = "Инвентаризация Инфраструктуры"
-$InventoryFile.Cells.Item(1,1) = 'Инвентаризационные данные ПК в ЦО'
-$InventoryFile.Cells.Item(1,1).Font.Size = 18
-$InventoryFile.Cells.Item(1,1).Font.Bold = $true
-$InventoryFile.Cells.Item(1,1).Font.ThemeFont = 1
-$InventoryFile.Cells.Item(1,1).Font.ThemeColor = 4
-$InventoryFile.Cells.Item(1,1).Font.ColorIndex = 55
-$InventoryFile.Cells.Item(1,1).Font.Color = 8210719
-$InventoryFile.Rows.Item(1).HorizontalAlignment = -4108
-$InventoryFile.Rows.Item(2).HorizontalAlignment = -4108
-$Range = $InventoryFile.Range('A1','Y1')
-$Range.Merge()
-#>
-
 $InventoryFile = $WorkBook.Worksheets.Item(1)
 $InventoryFile.columns.item('i').NumberFormat = "@"
 $InventoryFile.Rows.Item(1).HorizontalAlignment = -4108
+$InventoryFile.Columns.Item('u').HorizontalAlignment = -4108
+$InventoryFile.Columns.Item('w').HorizontalAlignment = -4108
+$InventoryFile.Columns.Item('y').HorizontalAlignment = -4108
 $InventoryFile.Cells.Item(1,1) = 'Имя Пользователя'
 $InventoryFile.Cells.Item(1,2) = 'Сетевое имя'
 $InventoryFile.Cells.Item(1,3) = 'Дата Проверки'
@@ -110,26 +164,33 @@ $InventoryFile.Cells.Item(1,22) = 'Видеокарта 2'
 $InventoryFile.Cells.Item(1,23) = 'Объем памяти (MB)'
 $InventoryFile.Cells.Item(1,24) = 'Видеокарта 3'
 $InventoryFile.Cells.Item(1,25) = 'Объем памяти (MB)'
-#Column Next Start 23
-#$InventoryFile.Cells.Item(2,23) = 'Сетевая карта'
-#$InventoryFile.Cells.Item(2,24) = 'MAC Адрес'
-$Range = $InventoryFile.Range("A1","Y1")
-$Range.AutoFilter() | Out-Null
-$Range.Interior.ColorIndex = 15
+$InventoryFile.Cells.Item(1,25) = 'Видеокарта 3'
+$InventoryFile.Cells.Item(1,26) = 'Объем памяти (MB)'
+#Column Network Start
+$InventoryFile.Cells.Item(1,27) = 'Cетевая Карта 1'
+$InventoryFile.Cells.Item(1,28) = 'MAC'
+$InventoryFile.Cells.Item(1,29) = 'Cетевая Карта 2'
+$InventoryFile.Cells.Item(1,30) = 'MAC'
+$InventoryFile.Cells.Item(1,31) = 'Cетевая Карта 3'
+$InventoryFile.Cells.Item(1,32) = 'MAC'
+$InventoryFile.Cells.Item(1,33) = 'Cетевая Карта 4'
+$InventoryFile.Cells.Item(1,34) = 'MAC'
+#Column Availabilyty  33
+$InventoryFile.Cells.Item(1,35) = 'Недоступен (День)'
+$InventoryFile.Cells.Item(1,36) = 'Дата Обнаружения'
 
 $InventoryFile.Name = 'Инвентаризация ЦО'
+$Range = $InventoryFile.Range("A1","AJ1")
+$Range.AutoFit()
+$Range.WrapText = $True
+$Range.AutoFilter() | Out-Null
+$Range.Interior.ColorIndex = 15
 # Выделяем жирным шапку таблицы
 $InventoryFile.Rows.Item(1).Font.Bold = $true
 
-# Определение стратовой площадки записи в файл.
-$Row = 2
-$Column = 1
-$BadColumn = 1
-$BadRow = 2
-$InitialRow = 2
-
 
 }
+# ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
     $FilePath = "C:\Test\MyExcel.xlsx"
@@ -140,7 +201,7 @@ elseif($Configuration_Start -eq 1)
     
 #Main Window CO
 $InventoryFile = $WorkBooks.Worksheets.Item(1)
-$Range = $InventoryFile.Range("A1","Y1")
+$Range = $InventoryFile.Range("A1","AJ1")
 $Range.AutoFilter() | Out-Null
 
 #Bad_PC
@@ -157,6 +218,7 @@ $Column = 1
 $BadColumn = $RowBad_New+1
 $BadRow = 2
 $InitialRow = $Row_new+1
+#$Initial_Bad_Row = $BadRow_New+1
 
 
 }
@@ -173,19 +235,50 @@ $a=$_.name
 $b=$_.Description
 if ((Test-Connection $a -count 1 -quiet) -eq "True")
 { 
+        # Bad_PC Initialize
+        if($Configuration_Start -eq 0)
+        {
+        # Заполнение Доступных ПК
+        $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
+        $BadColumn++
+        $Bad_PC.Cells.Item($BadRow, $BadColumn) = $a
+        $BadColumn++
+        $Check = $Bad_PC.UsedRange.find("$a")
+        $BadColumn = $Check.Column
+        $BadColumn++
+        if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "НЕДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
+        {
+            $RRW = $Check.Row
+            #Cтатус
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = "ДОСТУПЕН"
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn).font.ColorIndex = 10
+            $BadColumn++
+            # Дата Падения
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
+            $BadColumn++
+            # Дата восстановления
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
+            $BadColumn++
+            #Дата сканирования
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
+            $BadColumn++
+            # Расчет кол-ва дней
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn).Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
+        }
+
+
+
+        }
+
+
+
+
         $a
         $b
         $RowStart = $Row
         Write-Host "$A PC - Доступен!" -ForegroundColor Cyan
         Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер" | Out-File C:\Test\Comp\$a.txt
         #Запись имени пользователя и имени ПК
-        if($Configuration_Start -eq 0)
-        {
-            $InventoryFile.Cells.Item($Row, $Column) = $b
-            #$Range = $InventoryFile.Range("B"+$Row,"Y"+$Row)
-            #$Range.Merge()
-        $Row++
-        }
         $InventoryFile.Cells.Item($Row, $Column) = $b
         $Column++
         $InventoryFile.Cells.Item($Row, $Column) = $a
@@ -278,7 +371,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
             $ColOfElements++
 
             $RowOZY = $Row
-            #$Column = $ColemnTemp
+
         } -ErrorAction SilentlyContinue
         $Row = $RowTemp
         $Column=20
@@ -307,12 +400,12 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
                 }
                 
         } -ErrorAction SilentlyContinue
-
+        $Column = 27
         $Row = $RowTemp
         #$Column+=2
 ###########################################################################################
         
-       <# Сетевая Карта
+       # Сетевая Карта
         $ColemnTemp = $Column
         $RowTemp =$Row
         $ColOfElements = 0   
@@ -327,10 +420,8 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
             $InventoryFile.Cells.Item($Row, $Column) = $_.caption
             $Column++
             $InventoryFile.Cells.Item($Row, $Column) = $_.MACAddress
-            $Row++
+            $Column++
 
-            $RowNet = $Row
-            $Column = $ColemnTemp 
             }
         }
         else
@@ -340,33 +431,14 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
             $InventoryFile.Cells.Item($Row, $Column) = $_.Name
             $Column++
             $InventoryFile.Cells.Item($Row, $Column) = $_.MACAddress
-            $Row++
-
-            $RowNet = $Row
-            $Column = $ColemnTemp 
+            $Column++
             }
         }
-        #>
-<#if($Row -lt $RowHDD)
-{
-    $Row = $RowHDD
-}
-elseif($Row -lt $RowOZY)
-{
-    $Row = $RowOZY
-}
-elseif($Row -lt $RowVideo)
-{
-    $Row = $RowVideo
-}
-else
-{
 
-}
-#>
+
 
 $Range_Current = $InventoryFile.Range("B"+$Row,"Y"+$Row)
-$Range_Current.font.ColorIndex = 10
+#$Range_Current.font.ColorIndex = 10
 #$Range_Current.copy()
 
 #Range_Previous = $InventoryFile.Range("B"+($Row-1).ToString(),"Y"+($Row-1).ToString())
@@ -374,18 +446,22 @@ $Range_Current.font.ColorIndex = 10
 
 
 $Row++
+$BadRow++
+$BadColumn = 1
 $RowFinish = $Row
 $Column = 1
 
 $Set = 1
-For($i = $RowStart;$i -lt $RowFinish;$i++)
-{
-    if($InventoryFile.Cells.Item($i+1, $Set) -eq "")
-    {
-      $Range = $InventoryFile.Range('A'+$i.ToString(),'A'+$I+1)
-      $Range.Merge()  
-    }
-}
+#For($i = $RowStart;$i -lt $RowFinish;$i++)
+#{
+#    if($InventoryFile.Cells.Item($i+1, $Set) -eq "")
+#    {
+#      $Range = $InventoryFile.Range('A'+$i.ToString(),'A'+$I+1)
+#      $Range.Merge()  
+#    }
+#}
+
+
 $TEST
 
 }
@@ -397,7 +473,37 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
         $BadColumn++
         $Bad_PC.Cells.Item($BadRow, $BadColumn) = $a
         $BadColumn++
-        
+#Заполнение Недоступных ПК
+        $Check = $Bad_PC.UsedRange.find("$a")
+        $BadColumn = $Check.Column
+        $BadColumn++
+        if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "ДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
+        {
+            $RRW = $Check.Row
+            #Cтатус
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = "НЕДОСТУПЕН"
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn).font.Color = 255
+            $BadColumn++
+            # Дата Падения
+            If($Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
+            {
+                $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
+            }
+            else
+            {
+                #Установлена старая дата! Был недоступен Ранее
+            }
+            $BadColumn++
+            # Дата восстановления
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
+            $BadColumn++
+            #Дата сканирования
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
+            $BadColumn++
+            # Расчет кол-ва дней
+            $Bad_PC.Cells.Item($Check.Row,$BadColumn).Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
+        }
+
         $BadRow++
         $BadColumn = 1
 
@@ -408,12 +514,21 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 
 $Row--
-$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("Y{0}" -f $Row))
+$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("AJ{0}" -f $Row))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
     $DataRangeInventory.Borders.Item($_).Weight = 2
 }
+
+$BadRow--
+$DataRangeInventory = $Bad_PC.Range(("A{0}" -f 1), ("G{0}" -f $BadRow))
+7..12 | ForEach-Object `
+{
+    $DataRangeInventory.Borders.Item($_).LineStyle = 1
+    $DataRangeInventory.Borders.Item($_).Weight = 2
+}
+
 
 #Последняя строка файла 
 $Filler = [System.Type]::Missing
@@ -423,14 +538,41 @@ $T = "A" + $UsedRange.Rows.Count
 $Sorting_Space = $InventoryFile.range("A2:$T" )
 #$Sorting_Space.Select()
 $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
+# HDD Width
+$InventoryFile.columns.item('k').ColumnWidth = 7
+$InventoryFile.columns.item('l').ColumnWidth = 7
+$InventoryFile.columns.item('m').ColumnWidth = 7
+
+# ОЗУ Width
+
+$InventoryFile.columns.item('p').ColumnWidth = 5
+$InventoryFile.columns.item('q').ColumnWidth = 5
+$InventoryFile.columns.item('r').ColumnWidth = 5
+$InventoryFile.columns.item('s').ColumnWidth = 5
+
+# Video Width
+$InventoryFile.columns.item('T').ColumnWidth = 27
+$InventoryFile.columns.item('u').ColumnWidth = 7
+$InventoryFile.columns.item('v').ColumnWidth = 7
+$InventoryFile.columns.item('w').ColumnWidth = 7
+$InventoryFile.columns.item('X').ColumnWidth = 7
+$InventoryFile.columns.item('Y').ColumnWidth = 7
 
 
 $UsedBadRange = $Bad_PC.UsedRange
 $UsedBadRange.EntireColumn.AutoFit() | Out-Null
 
 $WorkBook.SaveAs("C:\Test\MyExcel.xlsx")
-$InventoryFile
 
+
+
+
+
+
+# Добавление новых строк их сравнение и выоплнение определения изменений
+
+if($Configuration_Start -eq 1)
+{
 #Блок проверки поступивших данных и удаление совпадающих.
 
 $Work_Range = $InventoryFile.UsedRange
@@ -438,33 +580,40 @@ $Work_Range = $InventoryFile.UsedRange
 
 foreach($Name in $Work_Range.Rows)
 {
+    $ColOfCompare = 0
     $Test = $Name.Row -as [int]
     #$Test
     $Username = $InventoryFile.Cells.Item($Test,1).Formula
 
-    if($InventoryFile.Cells.Item($Test,1).Formula -eq $InventoryFile.Cells.Item($Test+1,1).Formula -and ($InventoryFile.Cells.Item($Test,1).Formula -ne "" -or $InventoryFile.Cells.Item($Test+1,1).Formula -ne ""))
+    if($InventoryFile.Cells.Item($Test,1).Formula -eq $InventoryFile.Cells.Item($Test+1,1).Formula -and ($InventoryFile.Cells.Item($Test,1).Formula -ne "" -or $InventoryFile.Cells.Item($Test+1,1).Formula -ne "") -and $InventoryFile.Cells.Item($Test,2).Formula -ne "")
     {
-          #$Grep = $InventoryFile.Rows($Test+1)
-          #$Grep_Current = $InventoryFile.Rows($Test)
-          Write-Host $Username
-          Write-host $Name.Row
-          $Next = $Test+1
-          $Grep_Current = $InventoryFile.Range("D"+$Test,"Y"+$Test)
-          $Grep = $InventoryFile.Range("D"+$Next,"Y"+$Next)
-          $TESTGREP = $Grep_Current.Value2 -eq $Grep.Value2
-          if($Grep_Current.Value2 -eq $Grep.Value2)
-          {
-            Write-Host "Удалена Строка "$Grep.Row
-            $Grep.Delete()
-          }
-          elseif($Grep_Current.Value2 -ne $Grep.Value2)
-          {
-            Write-Host "Строки не равны!!!!"
-          }
-          else
-          {
-            Write-Host "ШТА?"
-          }  
+        Write-Host "Пользователи Совпадают!" $InventoryFile.Cells.Item($Test,1).Formula  " "  $InventoryFile.Cells.Item($Test+1,1).Formula
+        $TESTO = $Test+1
+        for($i=4;$i -lt 26;$i++)
+        {
+           if($InventoryFile.Cells.Item($Test,$i).Formula -eq $InventoryFile.Cells.Item($Test+1,$i).Formula)
+           {
+            $ColOfCompare++
+            }
+           else
+           {
+            "Ячейка не равны" + $InventoryFile.Cells.Item($Test,$i).Formula + " " + $InventoryFile.Cells.Item($Test+1,$i).Formula
+           }
+            
+        }
+        if($ColOfCompare -eq 22)
+        {
+            $InventoryFile.Rows($Test+1).Delete()
+        }
     }
 }
+}
+else
+{
+    "Первое Заполнение таблицы Выполнено!"
+}
 
+
+$WorkBook.SaveAs("C:\Test\MyExcel.xlsx")
+
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
