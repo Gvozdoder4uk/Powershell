@@ -12,9 +12,10 @@ import-module ActiveDirectory
 ############################################
 # Получаем список ПК из AD
 
-#Get-ADComputer -Filter {Name -Like "W00-*"}  -Properties Description |
-#Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-#Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\AllComputers.csv  -Encoding UTF8
+Get-ADComputer -Filter {Name -Like "RND_*"}  -Properties Description |
+Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
+Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\Rostov.csv  -Encoding UTF8
+
 
 # Инициализация Конфигурационного Файла:
 $Config_File = "C:\Test\cfg.ini"
