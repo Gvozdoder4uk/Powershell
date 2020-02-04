@@ -199,6 +199,10 @@ elseif($Configuration_Start -eq 1)
     $Excel.Visible = $true
     $Workbooks = $Excel.Workbooks.Open($FilePath)
     
+
+    #Sheets("data").Names("_FilterDatabase").Delete
+
+
 # Main Window CO Selection
 $InventoryFile = $WorkBooks.Worksheets.Item(1)
 #$Range = $InventoryFile.Range("A1","AJ1")
@@ -296,7 +300,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         #>
         if($Configuration_Start -eq 1)
         {
-         $Check = $Bad_PC.UsedRange.find($a)   
+         $Check = $Bad_PC.UsedRange.find()   
         if($Check -ne $null)
         {
             $BadColumn = $Check.Column
@@ -331,6 +335,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         {
 
         }
+        $Check = ""
         }
 
 
@@ -495,7 +500,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         }
         else
         {
-        $Parameter = Get-WmiObject -computername $a Win32_NetworkAdapter -Filter "NetConnectionStatus>0" | ForEach-Object `
+        $Parameter = Get-WmiObject -computername "W00-0626" Win32_NetworkAdapter | Where-Object {$_.Name -like "*Realtek*" -or $_.Name -like "*Ethernet*"} | ForEach-Object `
             {
             $InventoryFile.Cells.Item($Row, $Column) = $_.Name
             $Column++

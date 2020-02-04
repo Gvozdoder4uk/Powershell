@@ -12,9 +12,9 @@ import-module ActiveDirectory
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "RND_*"}  -Properties Description |
+Get-ADComputer -Filter {Name -Like "CHL_*"}  -Properties Description |
 Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\Rostov.csv  -Encoding UTF8
+Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\Chelyabinsk.csv  -Encoding UTF8
 
 
 # Инициализация Конфигурационного Файла:
@@ -72,7 +72,7 @@ $Bad_PC.Rows.Item(1).HorizontalAlignment = -4108
 #Страница Изменений
 $Change_History = $Excel.Worksheets.Add()
 $Change_History  = $WorkBook.Worksheets.Item(2)
-$Change_History.Name = "История Изменений ЦО"
+$Change_History.Name = "История Изменений Челябинск"
 
 $Change_History.columns.item('i').NumberFormat = "@"
 $Change_History.Rows.Item(1).HorizontalAlignment = -4108
@@ -194,7 +194,7 @@ $InventoryFile.Rows.Item(1).Font.Bold = $true
 # ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
-    $FilePath = "C:\Test\Инвентаризация_Ростов.xlsx"
+    $FilePath = "C:\Test\Инвентаризация_Челябинск.xlsx"
 
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
@@ -253,7 +253,7 @@ $Initial_Change_Row = $RowChange_New+1
 
 
 
-$ImportCsv = import-csv C:\TEST\Rostov.csv
+$ImportCsv = import-csv C:\TEST\Chelyabinsk.csv
 
 $Current_Date = Get-Date -format "dd.MM.yyyy"
  
@@ -756,12 +756,12 @@ foreach($Name in $Work_Range.Rows)
         }
     }
 }
-    $WorkBooks.SaveAs("C:\Test\Инвентаризация_Ростов.xlsx")
+    $WorkBooks.SaveAs("C:\Test\Инвентаризация_Челябинск.xlsx")
 }
 else
 {
     "Первое Заполнение таблицы Выполнено!"
-    $WorkBook.SaveAs("C:\Test\Инвентаризация_Ростов.xlsx")
+    $WorkBook.SaveAs("C:\Test\Инвентаризация_Челябинск.xlsx")
 }
 
 

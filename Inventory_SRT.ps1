@@ -12,9 +12,9 @@ import-module ActiveDirectory
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "RND_*"}  -Properties Description |
+Get-ADComputer -Filter {Name -Like "SRT_*"}  -Properties Description |
 Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\Rostov.csv  -Encoding UTF8
+Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\SARATOV.csv  -Encoding UTF8
 
 
 # Инициализация Конфигурационного Файла:
@@ -72,7 +72,7 @@ $Bad_PC.Rows.Item(1).HorizontalAlignment = -4108
 #Страница Изменений
 $Change_History = $Excel.Worksheets.Add()
 $Change_History  = $WorkBook.Worksheets.Item(2)
-$Change_History.Name = "История Изменений ЦО"
+$Change_History.Name = "История Изменений Саратов"
 
 $Change_History.columns.item('i').NumberFormat = "@"
 $Change_History.Rows.Item(1).HorizontalAlignment = -4108
@@ -129,7 +129,7 @@ $Initial_Change_Row = 2
 
 
 
-#Основная инвентаризационная страница ЦО
+#Основная инвентаризационная страница Саратов
 $InventoryFile = $WorkBook.Worksheets.Item(1)
 $InventoryFile.columns.item('i').NumberFormat = "@"
 $InventoryFile.Rows.Item(1).HorizontalAlignment = -4108
@@ -180,7 +180,7 @@ $InventoryFile.Cells.Item(1,34) = 'MAC'
 $InventoryFile.Cells.Item(1,35) = 'Недоступен (День)'
 $InventoryFile.Cells.Item(1,36) = 'Дата Обнаружения'
 
-$InventoryFile.Name = 'Инвентаризация ЦО'
+$InventoryFile.Name = 'Инвентаризация Саратов'
 $Range = $InventoryFile.Range("A1","AJ1")
 $Range.AutoFit()
 $Range.WrapText = $True
@@ -194,7 +194,7 @@ $InventoryFile.Rows.Item(1).Font.Bold = $true
 # ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
-    $FilePath = "C:\Test\Инвентаризация_Ростов.xlsx"
+    $FilePath = "C:\Test\Инвентаризация_Саратов.xlsx"
 
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
@@ -253,7 +253,7 @@ $Initial_Change_Row = $RowChange_New+1
 
 
 
-$ImportCsv = import-csv C:\TEST\Rostov.csv
+$ImportCsv = import-csv C:\TEST\Saratov.csv
 
 $Current_Date = Get-Date -format "dd.MM.yyyy"
  
@@ -756,12 +756,12 @@ foreach($Name in $Work_Range.Rows)
         }
     }
 }
-    $WorkBooks.SaveAs("C:\Test\Инвентаризация_Ростов.xlsx")
+    $WorkBooks.SaveAs("C:\Test\Инвентаризация_Саратов.xlsx")
 }
 else
 {
     "Первое Заполнение таблицы Выполнено!"
-    $WorkBook.SaveAs("C:\Test\Инвентаризация_Ростов.xlsx")
+    $WorkBook.SaveAs("C:\Test\Инвентаризация_Саратов.xlsx")
 }
 
 
