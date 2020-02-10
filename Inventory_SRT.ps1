@@ -586,7 +586,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
         }
         elseif($Configuration_Start -eq 1)
         {
-            $Check = $Bad_PC.UsedRange.find($a)
+
             $BadColumn = $Check.Column
             $BadColumn++
         if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "ДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
@@ -616,6 +616,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
         elseif($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "ДОСТУПЕН")
         {
             $Bad_PC.Cells.Item($Check.Row,6) = $Current_Date
+        }
         }
         }
 
