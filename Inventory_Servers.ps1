@@ -12,12 +12,12 @@ import-module ActiveDirectory
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "W00-*"}  -Properties Description |
-Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\AllComputers.csv  -Encoding UTF8
+#Get-ADComputer -Filter {Name -Like "msk*"} -Properties Description |
+#Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
+#Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\Servers\AllComputers.csv  -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:
-$Config_File = "C:\Test\cfg.ini"
+$Config_File = "C:\Servers\cfg.ini"
 Get-Content $Config_File| foreach-object -begin {$START=@{}} -process { $k = [regex]::split($_,'='); if(($k[0].CompareTo("") -ne 0) -and ($k[0].StartsWith("[") -ne $True)) { $START.Add($k[0], $k[1]) } }
 $Configuration_Start = $START.Programm_Mode
 
@@ -79,47 +79,33 @@ $Change_History.Cells.Item(1,1) = 'Имя Пользователя'
 $Change_History.Cells.Item(1,2) = 'Сетевое имя'
 $Change_History.Cells.Item(1,3) = 'Дата Проверки'
 $Change_History.Cells.Item(1,4) = 'OS'
-$Change_History.Cells.Item(1,5) = 'Процессор'
-$Change_History.Cells.Item(1,6) = 'Модель'
-$Change_History.Cells.Item(1,7) = 'Материнская плата'
-$Change_History.Cells.Item(1,8) = 'Модель'
-$Change_History.Cells.Item(1,9) = 'Серийный номер'
-#Column HDD Start 8
-$Change_History.Cells.Item(1,10) = 'HDD 1'
-$Change_History.Cells.Item(1,11) = 'HDD 2'
-$Change_History.Cells.Item(1,12) = 'HDD 3'
-$Change_History.Cells.Item(1,13) = 'HDD 4'
-#$Change_History.Cells.Item(1,9) = 'Объем (Гб)'
-#Column OZY START 14
-$Change_History.Cells.Item(1,14) = 'Суммарно ОЗУ (Гб)'
-$Change_History.Cells.Item(1,15) = 'Тип Памяти'
-$Change_History.Cells.Item(1,16) = 'ОЗУ 1 (ГБ)'
-$Change_History.Cells.Item(1,17) = 'ОЗУ 2 (ГБ)'
-$Change_History.Cells.Item(1,18) = 'ОЗУ 3 (ГБ)'
-$Change_History.Cells.Item(1,19) = 'ОЗУ 4 (ГБ)'
-# Column Video Start 20
-$Change_History.Cells.Item(1,20) = 'Видеокарта 1'
-$Change_History.Cells.Item(1,21) = 'Объем памяти (MB)'
-$Change_History.Cells.Item(1,22) = 'Видеокарта 2'
-$Change_History.Cells.Item(1,23) = 'Объем памяти (MB)'
-$Change_History.Cells.Item(1,24) = 'Видеокарта 3'
-$Change_History.Cells.Item(1,25) = 'Объем памяти (MB)'
-$Change_History.Cells.Item(1,25) = 'Видеокарта 3'
-$Change_History.Cells.Item(1,26) = 'Объем памяти (MB)'
-#Column Network Start
-$Change_History.Cells.Item(1,27) = 'Cетевая Карта 1'
-$Change_History.Cells.Item(1,28) = 'MAC'
-$Change_History.Cells.Item(1,29) = 'Cетевая Карта 2'
-$Change_History.Cells.Item(1,30) = 'MAC'
-$Change_History.Cells.Item(1,31) = 'Cетевая Карта 3'
-$Change_History.Cells.Item(1,32) = 'MAC'
-$Change_History.Cells.Item(1,33) = 'Cетевая Карта 4'
-$Change_History.Cells.Item(1,34) = 'MAC'
+$Change_History.Cells.Item(1,5) = 'Процессор 1'
+$Change_History.Cells.Item(1,6) = 'Слот'
+$Change_History.Cells.Item(1,7) = 'Процессор 2'
+$Change_History.Cells.Item(1,8) = 'Слот'
+$Change_History.Cells.Item(1,9) = 'Процессор 3'
+$Change_History.Cells.Item(1,10) = 'Слот'
+$Change_History.Cells.Item(1,11) = 'Процессор 4'
+$Change_History.Cells.Item(1,12) = 'Слот'
+#HDD START 13
+$Change_History.Cells.Item(1,13) = 'HDD 1'
+$Change_History.Cells.Item(1,14) = 'HDD 2'
+$Change_History.Cells.Item(1,15) = 'HDD 3'
+$Change_History.Cells.Item(1,16) = 'HDD 4'
+$Change_History.Cells.Item(1,17) = 'HDD 5'
+$Change_History.Cells.Item(1,18) = 'HDD 6'
+$Change_History.Cells.Item(1,19) = 'HDD 7'
+$Change_History.Cells.Item(1,20) = 'HDD 8'
+$Change_History.Cells.Item(1,21) = 'HDD 9'
+$Change_History.Cells.Item(1,22) = 'HDD 10'
+#Column OZY START 23
+$Change_History.Cells.Item(1,23) = 'Суммарно ОЗУ (Гб)'
+$Change_History.Cells.Item(1,24) = 'Тип Памяти'
 #Column Availabilyty  33
 
 
 
-$Range = $Change_History.Range("A1","AJ1")
+$Range = $Change_History.Range("A1","X1")
 $Range.AutoFilter() | Out-Null
 $Range.Interior.ColorIndex = 15
 
@@ -140,45 +126,32 @@ $InventoryFile.Cells.Item(1,1) = 'Имя Пользователя'
 $InventoryFile.Cells.Item(1,2) = 'Сетевое имя'
 $InventoryFile.Cells.Item(1,3) = 'Дата Проверки'
 $InventoryFile.Cells.Item(1,4) = 'OS'
-$InventoryFile.Cells.Item(1,5) = 'Процессор'
-$InventoryFile.Cells.Item(1,6) = 'Модель'
-$InventoryFile.Cells.Item(1,7) = 'Материнская плата'
-$InventoryFile.Cells.Item(1,8) = 'Модель'
-$InventoryFile.Cells.Item(1,9) = 'Серийный номер'
-#Column HDD Start 8
-$InventoryFile.Cells.Item(1,10) = 'HDD 1'
-$InventoryFile.Cells.Item(1,11) = 'HDD 2'
-$InventoryFile.Cells.Item(1,12) = 'HDD 3'
-$InventoryFile.Cells.Item(1,13) = 'HDD 4'
-#$InventoryFile.Cells.Item(1,9) = 'Объем (Гб)'
-#Column OZY START 14
-$InventoryFile.Cells.Item(1,14) = 'Суммарно ОЗУ (Гб)'
-$InventoryFile.Cells.Item(1,15) = 'Тип Памяти'
-$InventoryFile.Cells.Item(1,16) = 'ОЗУ 1 (ГБ)'
-$InventoryFile.Cells.Item(1,17) = 'ОЗУ 2 (ГБ)'
-$InventoryFile.Cells.Item(1,18) = 'ОЗУ 3 (ГБ)'
-$InventoryFile.Cells.Item(1,19) = 'ОЗУ 4 (ГБ)'
-# Column Video Start 20
-$InventoryFile.Cells.Item(1,20) = 'Видеокарта 1'
-$InventoryFile.Cells.Item(1,21) = 'Объем памяти (MB)'
-$InventoryFile.Cells.Item(1,22) = 'Видеокарта 2'
-$InventoryFile.Cells.Item(1,23) = 'Объем памяти (MB)'
-$InventoryFile.Cells.Item(1,24) = 'Видеокарта 3'
-$InventoryFile.Cells.Item(1,25) = 'Объем памяти (MB)'
-$InventoryFile.Cells.Item(1,25) = 'Видеокарта 3'
-$InventoryFile.Cells.Item(1,26) = 'Объем памяти (MB)'
-#Column Network Start
-$InventoryFile.Cells.Item(1,27) = 'Cетевая Карта 1'
-$InventoryFile.Cells.Item(1,28) = 'MAC'
-$InventoryFile.Cells.Item(1,29) = 'Cетевая Карта 2'
-$InventoryFile.Cells.Item(1,30) = 'MAC'
-#Column Availabilyty  31
-$InventoryFile.Cells.Item(1,31) = 'Монитор №1'
-$InventoryFile.Cells.Item(1,32) = 'Монитор №2'
-$InventoryFile.Cells.Item(1,33) = 'Монитор №3'
-$InventoryFile.Cells.Item(1,34) = 'Монитор №4'
-$InventoryFile.Name = 'Инвентаризация ЦО'
-$Range = $InventoryFile.Range("A1","AJ1")
+$InventoryFile.Cells.Item(1,5) = 'Процессор 1'
+$InventoryFile.Cells.Item(1,6) = 'Слот'
+$InventoryFile.Cells.Item(1,7) = 'Процессор 2'
+$InventoryFile.Cells.Item(1,8) = 'Слот'
+$InventoryFile.Cells.Item(1,9) = 'Процессор 3'
+$InventoryFile.Cells.Item(1,10) = 'Слот'
+$InventoryFile.Cells.Item(1,11) = 'Процессор 4'
+$InventoryFile.Cells.Item(1,12) = 'Слот'
+#HDD START 13
+$InventoryFile.Cells.Item(1,13) = 'HDD 1'
+$InventoryFile.Cells.Item(1,14) = 'HDD 2'
+$InventoryFile.Cells.Item(1,15) = 'HDD 3'
+$InventoryFile.Cells.Item(1,16) = 'HDD 4'
+$InventoryFile.Cells.Item(1,17) = 'HDD 5'
+$InventoryFile.Cells.Item(1,18) = 'HDD 6'
+$InventoryFile.Cells.Item(1,19) = 'HDD 7'
+$InventoryFile.Cells.Item(1,20) = 'HDD 8'
+$InventoryFile.Cells.Item(1,21) = 'HDD 9'
+$InventoryFile.Cells.Item(1,22) = 'HDD 10'
+#Column OZY START 23
+$InventoryFile.Cells.Item(1,23) = 'Суммарно ОЗУ (Гб)'
+$InventoryFile.Cells.Item(1,24) = 'Тип Памяти'
+
+
+$InventoryFile.Name = 'Инвентаризация Серверов'
+$Range = $InventoryFile.Range("A1","X1")
 $Range.AutoFit()
 $Range.WrapText = $True
 $Range.AutoFilter() | Out-Null
@@ -191,12 +164,11 @@ $InventoryFile.Rows.Item(1).Font.Bold = $true
 # ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
-    $FilePath = "C:\Test\MyExcel.xlsx"
+    $FilePath = "C:\Servers\MyExcel.xlsx"
 
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
     $Workbooks = $Excel.Workbooks.Open($FilePath)
-    $InventoryFile.Names("_FilterDatabase").Delete()
     
 
     #Sheets("data").Names("_FilterDatabase").Delete
@@ -204,9 +176,6 @@ elseif($Configuration_Start -eq 1)
 
 # Main Window CO Selection
 $InventoryFile = $WorkBooks.Worksheets.Item(1)
-
-#$Range = $InventoryFile.Range("A1","AJ1")
-#$Range.AutoFilter() | Out-Null
 
 # Bad_PC Selection
 $Bad_PC  = $WorkBooks.Worksheets.Item(3)
@@ -253,7 +222,7 @@ $Initial_Change_Row = $RowChange_New+1
 
 
 
-$ImportCsv = import-csv c:\Test\AllComputers.csv
+$ImportCsv = import-csv C:\Servers\AllComputers.csv
 
 $Current_Date = Get-Date -format "dd.MM.yyyy"
  
@@ -262,42 +231,6 @@ $a=$_.name
 $b=$_.Description
 if ((Test-Connection $a -count 1 -quiet) -eq "True")
 { 
-
-        # Bad_PC Initialize
-        <#if($Configuration_Start -eq 0)
-        {
-        # Заполнение Доступных ПК
-        $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
-        $BadColumn++
-        $Bad_PC.Cells.Item($BadRow, $BadColumn) = $a
-        $BadColumn++
-        $Check = $Bad_PC.UsedRange.find("$a")
-        $BadColumn = $Check.Column
-        $BadColumn++
-        if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "НЕДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
-        {
-            $RRW = $Check.Row
-            #Cтатус
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = "ДОСТУПЕН"
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn).font.ColorIndex = 10
-            $BadColumn++
-            # Дата Падения
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
-            $BadColumn++
-            # Дата восстановления
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
-            $BadColumn++
-            #Дата сканирования
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
-            $BadColumn++
-            # Расчет кол-ва дней
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn).Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
-        }
-        
-
-
-        }
-        #>
         if($Configuration_Start -eq 1)
         {
          $Check = $Bad_PC.UsedRange.find($a)   
@@ -338,14 +271,11 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $Check = ""
         }
 
-
-
-
         $a
         $b
         $RowStart = $Row
         Write-Host "$A PC - Доступен!" -ForegroundColor Cyan
-        Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер" 
+        Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер"
         #Запись имени пользователя и имени ПК
         $InventoryFile.Cells.Item($Row, $Column) = $b
         $Column++
@@ -359,25 +289,41 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $Column++
         
 ###########################################################################################
-
+        $CheckSlot = Get-WmiObject -computername $a Win32_Processor | Select-Object name, SocketDesignation, Description | Select -First 1
         #Модель процессора и прочая ересь
-        $Parameter = Get-WmiObject -computername $a Win32_Processor | Select-Object name, SocketDesignation, Description -ErrorAction Stop
-        $InventoryFile.Cells.Item($Row, $Column) = $Parameter.name
-        $Column++
-        $InventoryFile.Cells.Item($Row, $Column) = $Parameter.SocketDesignation
-        $Column++
-        
+        if($Parameter -like "*2003*" -and $CheckSlot.SocketDesignation -like "*None*")
+        {
+            Get-WmiObject -computername $a Win32_Processor | Select-Object name, SocketDesignation, Description | Select -First 1 | ForEach-Object `
+            {
+                    $InventoryFile.Cells.Item($Row, $Column) = $_.name
+                    $Column++
+                    $InventoryFile.Cells.Item($Row, $Column) = $_.SocketDesignation
+                    $Column++
+            } -ErrorAction Stop            
+        }
+        elseif($Parameter -like "*2003*" -and $CheckSlot.SocketDesignation -notlike "*None*")
+        {
+            Get-WmiObject -computername $a Win32_Processor | Select-Object name, SocketDesignation, Description | Select -First 2 | ForEach-Object `
+            {
+                    $InventoryFile.Cells.Item($Row, $Column) = $_.name
+                    $Column++
+                    $InventoryFile.Cells.Item($Row, $Column) = $_.SocketDesignation
+                    $Column++
+            } -ErrorAction Stop            
+        }
+        else
+        {
+        Get-WmiObject -computername $a Win32_Processor | Select-Object name, SocketDesignation, Description | ForEach-Object `
+        {
+                    $InventoryFile.Cells.Item($Row, $Column) = $_.name
+                    $Column++
+                    $InventoryFile.Cells.Item($Row, $Column) = $_.SocketDesignation
+                    $Column++
+        } -ErrorAction Stop
+        }
+        $Column=13
 ###########################################################################################
 
-        #Модель материнской платы
-        "Материнская плата" 
-        $Parameter = Get-WmiObject -computername $a Win32_BaseBoard | Select-Object Manufacturer, Product, SerialNumber -ErrorAction Stop
-        $InventoryFile.Cells.Item($Row, $Column) = $Parameter.Manufacturer
-        $Column++
-        $InventoryFile.Cells.Item($Row, $Column) = $Parameter.Product
-        $Column++
-        $InventoryFile.Cells.Item($Row, $Column) = $Parameter.Serialnumber
-        $Column++
 ###########################################################################################
 
         # HDD + SSD
@@ -386,40 +332,58 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $ColemnTemp = $Column
         $RowTemp = $Row
         $ColOfElements = 0
-        if($a -eq "W00-0626")
-        {
-           
-        }
-        else
-        {
         Get-WmiObject -computername $a Win32_DiskDrive | Where-Object {$_.Model -notlike "*usb*" -or $_.Model -notlike "*USB*"}| ForEach-Object `
         {
-            $InventoryFile.Cells.Item($Row, $Column) = $_.Model
-            $Column++
-            #$InventoryFile.Cells.Item($Row, $Column) = ($_.Size/1GB).ToString("F00")
-            #$Row++
-            $ColOfElements++
-            #Write-Host "Жесткие диски "$Column
+            $SizeDisk = ($_.Size/1GB)
             
-            #$RowHDD = $Row
-            #$Column = $ColemnTemp
+            if($SizeDisk -gt 999)
+            {
+                $SizeDisk =($_.Size/1TB)
+                $SizeDisk = $SizeDisk.ToString("F00")
+                $SizeDisk = "$SizeDisk TB"
+                $InventoryFile.Cells.Item($Row, $Column) = $SizeDisk
+                $Column++
+                $ColOfElements++
+                $SizeDisk = $Null
+            }
+            else
+            {
+
+                if($SizeDisk -lt 50)
+                {
+    
+                }
+                else
+                {
+                $SizeDisk = $SizeDisk.ToString("F00")
+                $SizeDisk = "$SizeDisk GB"
+                $InventoryFile.Cells.Item($Row, $Column) = $SizeDisk
+                $Column++
+                $ColOfElements++
+                $SizeDisk = $Null
+                }
+
+        }
+            
+            
+
 
         } -ErrorAction Stop
-        }
+
         $Row = $RowTemp
-        $Column=14
+        $Column=23
         
 ###########################################################################################
        # ОЗУ
-        "Оперативная память"
+        "Оперативная память" 
         $ColemnTemp = $Column
         $RowTemp =$Row
         $ColOfElements = 0
 
         
 
-        $T = Get-WmiObject -computername $a Win32_Physicalmemory | Measure-Object -Property capacity -Sum
-        $T= $T.Sum/1GB
+        $T = Get-WmiObject -computername MSKTS5 Win32_Physicalmemory | Measure-Object -Property capacity -Sum
+        $T= $T.Sum/1GB.ToString("F00")
         $InventoryFile.Cells.Item($Row, $Column) = $T
         $Column++
         $Speed = (Get-WmiObject -computername $a Win32_Physicalmemory).Speed | select -First 1
@@ -437,101 +401,16 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
             }
         $InventoryFile.Cells.Item($Row, $Column) = $Type
         $Column++
-        Get-WmiObject -computername $a Win32_Physicalmemory | ForEach-Object `
-        {
-            $InventoryFile.Cells.Item($Row, $Column) = ([Math]::Round($_.Capacity/1GB, 2))
-            $Column++
-            $ColOfElements++
-
-            $RowOZY = $Row
-
-        } -ErrorAction Stop
         $Row = $RowTemp
-        $Column=20
+        #$Column=20
+###########################################################################################
+
 ###########################################################################################
         
-        # Видеокарта
-        $ColemnTemp = $Column
-        $RowTemp =$Row
-        $ColOfElements = 0
-        #Write-Host "Перед Видяхой "$Column
-        Get-WmiObject -computername $a Win32_videoController | ForEach-Object `
-        {
-                
-                if($_.Name -like "Radmin*")
-                {
-                }
-                else
-                {
-                $InventoryFile.Cells.Item($Row, $Column) = $_.name
-                $Column++
-                $InventoryFile.Cells.Item($Row, $Column) = ($_.AdapterRAM/1MB).tostring("F00")
-                $Column++
-                $ColOfElements++
-
-                $RowVideo = $Row
-                }
-                
-        } -ErrorAction Stop
-        $Column = 27
-        $Row = $RowTemp
-        #$Column+=2
-###########################################################################################
-        
-       # Сетевая Карта
-        $ColemnTemp = $Column
-        $RowTemp =$Row
-        $ColOfElements = 0   
-
-        
-        $OS=Get-WmiObject -computername $a Win32_OperatingSystem | foreach {$_.caption}
-        if ($OS -eq "Microsoft Windows 2000 Professional")
-        { 
-        $Parameter = Get-WmiObject -computername $a Win32_NetworkAdapterConfiguration -Filter "DHCPEnabled=True" | ForEach-Object `
-            {
-
-            $InventoryFile.Cells.Item($Row, $Column) = $_.caption
-            $Column++
-            $InventoryFile.Cells.Item($Row, $Column) = $_.MACAddress
-            $Column++
-
-            }
-        }
-        else
-        {
-        $Parameter = Get-WmiObject -computername $a Win32_NetworkAdapter | Where-Object {$_.Name -like "*Realtek*" -or $_.Name -like "*Ethernet*" -and $_.Name -notlike "*Wireless*" -and  $_.Name -notlike "*Bluetooth*" -and $_.Name -notlike "*Apple*" -and $_.Name -notlike "*Hyper-V*" -and $_.MACAddress -notlike ""} | ForEach-Object `
-            {
-            $InventoryFile.Cells.Item($Row, $Column) = $_.Name
-            $Column++
-            $InventoryFile.Cells.Item($Row, $Column) = $_.MACAddress
-            $Column++
-            }
-        }
-
-        $ColemnTemp = $Column
-        $RowTemp =$Row
-        $ColOfElements = 0
-        $Column = 31
-
-        $Monitors = Get-WmiObject WmiMonitorID -ComputerName $a -Namespace root\wmi | ForEach-Object {($_.UserFriendlyName | foreach {[char]$_}) -join "";}
-        $Monitors | ForEach-Object {
-
-            $InventoryFile.Cells.Item($Row, $Column) = $_
-            $Column++
-
-
-        } -ErrorAction Stop
-
 
 
 
 $Range_Current = $InventoryFile.Range("B"+$Row,"Y"+$Row)
-#$Range_Current.font.ColorIndex = 10
-#$Range_Current.copy()
-
-#Range_Previous = $InventoryFile.Range("B"+($Row-1).ToString(),"Y"+($Row-1).ToString())
-#$InventoryFile.Paste($Range_Previous)
-
 
 $Row++
 $BadColumn = 1
@@ -539,14 +418,6 @@ $RowFinish = $Row
 $Column = 1
 
 $Set = 1
-#For($i = $RowStart;$i -lt $RowFinish;$i++)
-#{
-#    if($InventoryFile.Cells.Item($i+1, $Set) -eq "")
-#    {
-#      $Range = $InventoryFile.Range('A'+$i.ToString(),'A'+$I+1)
-#      $Range.Merge()  
-#    }
-#}
 
 # Formula Excel
 $Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
@@ -684,7 +555,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 
 $Row--
-$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("AH{0}" -f $Row))
+$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("X{0}" -f $Row))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
@@ -699,8 +570,8 @@ $DataRangeInventory = $Bad_PC.Range(("A{0}" -f 1), ("G{0}" -f $BadRow))
     $DataRangeInventory.Borders.Item($_).Weight = 2
 }
 
-$Row_Change++
-$DataRangeInventory = $Change_History.Range(("A{0}" -f 1), ("AH{0}" -f $Row_Change))
+$Row_Change--
+$DataRangeInventory = $Change_History.Range(("A{0}" -f 1), ("X{0}" -f $Row_Change))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
@@ -806,7 +677,7 @@ foreach($Name in $Work_Range.Rows)
             
         }
 
-        if($ColOfCompare -eq 25)
+        if($ColOfCompare -eq 26)
         {
             $InventoryFile.Rows($Test+1).Delete()
         }
@@ -821,12 +692,12 @@ foreach($Name in $Work_Range.Rows)
         }
     }
 }
-    #$WorkBooks.SaveAs("C:\Test\Инвентаризация.xlsx")
+    #$WorkBooks.SaveAs("C:\Servers\Инвентаризация.xlsx")
 }
 else
 {
     "Первое Заполнение таблицы Выполнено!"
-    $WorkBook.SaveAs("C:\Test\Инвентаризация.xlsx")
+    
 }
 
 # Cортировка по Имени ПК
@@ -876,15 +747,15 @@ $Sorting_Space = $InventoryFile.range("A2:$T" )
 #$Sorting_Space.Select()
 $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 
-$InventoryFile.Range("AI1:AN200").Delete()
+$InventoryFile.Range("Y1:AZ200").Delete()
 
 if($Configuration_Start -eq 0){
-$WorkBook.SaveAs("C:\Test\Инвентаризация.xlsx")
+$WorkBook.SaveAs("C:\Servers\Инвентаризация_Cерверов.xlsx")
 }
 else
 {
 
-$WorkBooks.SaveAs("C:\Test\Инвентаризация.xlsx")
+$WorkBooks.SaveAs("C:\Servers\Инвентаризация_Серверов.xlsx")
 }
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 

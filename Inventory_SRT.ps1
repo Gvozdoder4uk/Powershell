@@ -14,11 +14,10 @@ import-module ActiveDirectory
 
 Get-ADComputer -Filter {Name -Like "SRT_*"}  -Properties Description |
 Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\SARATOV.csv  -Encoding UTF8
-
+Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\Servers\SARATOV.csv  -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:
-$Config_File = "C:\Test\cfg.ini"
+$Config_File = "C:\Servers\cfg.ini"
 Get-Content $Config_File| foreach-object -begin {$START=@{}} -process { $k = [regex]::split($_,'='); if(($k[0].CompareTo("") -ne 0) -and ($k[0].StartsWith("[") -ne $True)) { $START.Add($k[0], $k[1]) } }
 $Configuration_Start = $START.Programm_Mode
 
@@ -72,7 +71,7 @@ $Bad_PC.Rows.Item(1).HorizontalAlignment = -4108
 #Страница Изменений
 $Change_History = $Excel.Worksheets.Add()
 $Change_History  = $WorkBook.Worksheets.Item(2)
-$Change_History.Name = "История Изменений Саратов"
+$Change_History.Name = "История Изменений ЦО"
 
 $Change_History.columns.item('i').NumberFormat = "@"
 $Change_History.Rows.Item(1).HorizontalAlignment = -4108
@@ -112,11 +111,12 @@ $Change_History.Cells.Item(1,27) = 'Cетевая Карта 1'
 $Change_History.Cells.Item(1,28) = 'MAC'
 $Change_History.Cells.Item(1,29) = 'Cетевая Карта 2'
 $Change_History.Cells.Item(1,30) = 'MAC'
+$Change_History.Cells.Item(1,31) = 'Cетевая Карта 3'
+$Change_History.Cells.Item(1,32) = 'MAC'
 $Change_History.Cells.Item(1,33) = 'Cетевая Карта 4'
 $Change_History.Cells.Item(1,34) = 'MAC'
 #Column Availabilyty  33
-$Change_History.Cells.Item(1,35) = 'Недоступен (День)'
-$Change_History.Cells.Item(1,36) = 'Дата Обнаружения'
+
 
 
 $Range = $Change_History.Range("A1","AJ1")
@@ -129,7 +129,7 @@ $Initial_Change_Row = 2
 
 
 
-#Основная инвентаризационная страница Саратов
+#Основная инвентаризационная страница ЦО
 $InventoryFile = $WorkBook.Worksheets.Item(1)
 $InventoryFile.columns.item('i').NumberFormat = "@"
 $InventoryFile.Rows.Item(1).HorizontalAlignment = -4108
@@ -172,15 +172,12 @@ $InventoryFile.Cells.Item(1,27) = 'Cетевая Карта 1'
 $InventoryFile.Cells.Item(1,28) = 'MAC'
 $InventoryFile.Cells.Item(1,29) = 'Cетевая Карта 2'
 $InventoryFile.Cells.Item(1,30) = 'MAC'
-$InventoryFile.Cells.Item(1,31) = 'Cетевая Карта 3'
-$InventoryFile.Cells.Item(1,32) = 'MAC'
-$InventoryFile.Cells.Item(1,33) = 'Cетевая Карта 4'
-$InventoryFile.Cells.Item(1,34) = 'MAC'
-#Column Availabilyty  33
-$InventoryFile.Cells.Item(1,35) = 'Недоступен (День)'
-$InventoryFile.Cells.Item(1,36) = 'Дата Обнаружения'
-
-$InventoryFile.Name = 'Инвентаризация Саратов'
+#Column Availabilyty  31
+$InventoryFile.Cells.Item(1,31) = 'Монитор №1'
+$InventoryFile.Cells.Item(1,32) = 'Монитор №2'
+$InventoryFile.Cells.Item(1,33) = 'Монитор №3'
+$InventoryFile.Cells.Item(1,34) = 'Монитор №4'
+$InventoryFile.Name = 'Инвентаризация ЦО'
 $Range = $InventoryFile.Range("A1","AJ1")
 $Range.AutoFit()
 $Range.WrapText = $True
@@ -194,17 +191,18 @@ $InventoryFile.Rows.Item(1).Font.Bold = $true
 # ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
-    $FilePath = "C:\Test\Инвентаризация_Саратов.xlsx"
+    $FilePath = "C:\Servers\MyExcel.xlsx"
 
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
     $Workbooks = $Excel.Workbooks.Open($FilePath)
+    
 
     #Sheets("data").Names("_FilterDatabase").Delete
 
+
 # Main Window CO Selection
 $InventoryFile = $WorkBooks.Worksheets.Item(1)
-
 #$Range = $InventoryFile.Range("A1","AJ1")
 #$Range.AutoFilter() | Out-Null
 
@@ -253,7 +251,7 @@ $Initial_Change_Row = $RowChange_New+1
 
 
 
-$ImportCsv = import-csv C:\TEST\Saratov.csv
+$ImportCsv = import-csv C:\Servers\SARATOV.csv
 
 $Current_Date = Get-Date -format "dd.MM.yyyy"
  
@@ -335,6 +333,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         {
 
         }
+        $Check = ""
         }
 
 
@@ -344,7 +343,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $b
         $RowStart = $Row
         Write-Host "$A PC - Доступен!" -ForegroundColor Cyan
-        Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер" | Out-File C:\Test\Comp\$a.txt
+        Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер" 
         #Запись имени пользователя и имени ПК
         $InventoryFile.Cells.Item($Row, $Column) = $b
         $Column++
@@ -360,7 +359,6 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
 ###########################################################################################
 
         #Модель процессора и прочая ересь
-        "Процессор" | Out-File C:\Test\Comp\$a.txt -Append
         $Parameter = Get-WmiObject -computername $a Win32_Processor | Select-Object name, SocketDesignation, Description -ErrorAction Stop
         $InventoryFile.Cells.Item($Row, $Column) = $Parameter.name
         $Column++
@@ -370,7 +368,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
 ###########################################################################################
 
         #Модель материнской платы
-        "Материнская плата" | Out-File C:\Test\Comp\$a.txt -append
+        "Материнская плата" 
         $Parameter = Get-WmiObject -computername $a Win32_BaseBoard | Select-Object Manufacturer, Product, SerialNumber -ErrorAction Stop
         $InventoryFile.Cells.Item($Row, $Column) = $Parameter.Manufacturer
         $Column++
@@ -381,7 +379,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
 ###########################################################################################
 
         # HDD + SSD
-        "Жесткие диски" | out-file C:\Test\Comp\$a.txt -Append
+        "Жесткие диски" 
 
         $ColemnTemp = $Column
         $RowTemp = $Row
@@ -392,7 +390,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         }
         else
         {
-        Get-WmiObject -computername $a Win32_DiskDrive | ForEach-Object `
+        Get-WmiObject -computername $a Win32_DiskDrive | Where-Object {$_.Model -notlike "*usb*" -or $_.Model -notlike "*USB*"}| ForEach-Object `
         {
             $InventoryFile.Cells.Item($Row, $Column) = $_.Model
             $Column++
@@ -411,7 +409,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         
 ###########################################################################################
        # ОЗУ
-        "Оперативная память" | out-file C:\Test\Comp\$a.txt -Append
+        "Оперативная память"
         $ColemnTemp = $Column
         $RowTemp =$Row
         $ColOfElements = 0
@@ -499,7 +497,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         }
         else
         {
-        $Parameter = Get-WmiObject -computername $a Win32_NetworkAdapter -Filter "NetConnectionStatus>0" | ForEach-Object `
+        $Parameter = Get-WmiObject -computername $a Win32_NetworkAdapter | Where-Object {$_.Name -like "*Realtek*" -or $_.Name -like "*Ethernet*" -and $_.Name -notlike "*Wireless*" -and  $_.Name -notlike "*Bluetooth*" -and $_.Name -notlike "*Apple*" -and $_.Name -notlike "*Hyper-V*" -and $_.MACAddress -notlike ""} | ForEach-Object `
             {
             $InventoryFile.Cells.Item($Row, $Column) = $_.Name
             $Column++
@@ -507,6 +505,21 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
             $Column++
             }
         }
+
+        $ColemnTemp = $Column
+        $RowTemp =$Row
+        $ColOfElements = 0
+        $Column = 31
+
+        $Monitors = Get-WmiObject WmiMonitorID -ComputerName $a -Namespace root\wmi | ForEach-Object {($_.UserFriendlyName | foreach {[char]$_}) -join "";}
+        $Monitors | ForEach-Object {
+
+            $InventoryFile.Cells.Item($Row, $Column) = $_
+            $Column++
+
+
+        } -ErrorAction Stop
+
 
 
 
@@ -519,7 +532,6 @@ $Range_Current = $InventoryFile.Range("B"+$Row,"Y"+$Row)
 
 
 $Row++
-$BadRow++
 $BadColumn = 1
 $RowFinish = $Row
 $Column = 1
@@ -534,8 +546,9 @@ $Set = 1
 #    }
 #}
 
+# Formula Excel
+$Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
 
-$TEST
 
 }
 elseif ((Test-connection $a -count 1 -quiet) -ne "True")
@@ -552,11 +565,13 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 # Заполнение Недоступных ПК
         $Check = $Bad_PC.UsedRange.find("$a")
+                    $RRW = $Check.Row
+                    
         $BadColumn = $Check.Column
         $BadColumn++
         if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "ДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
         {
-            $RRW = $Check.Row
+
             #Cтатус
             $Bad_PC.Cells.Item($Check.Row,$BadColumn) = "НЕДОСТУПЕН"
             $Bad_PC.Cells.Item($Check.Row,$BadColumn).font.Color = 255
@@ -578,7 +593,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
             $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
             $BadColumn++
             # Расчет кол-ва дней 
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn).Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
+            #$Bad_PC.Cells.Item($Check.Row,$BadColumn).Formula = $Formula
         }
 
         $BadRow++
@@ -586,38 +601,78 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
         }
         elseif($Configuration_Start -eq 1)
         {
+            Write-Host "$A PC - НЕДОСТУПЕН"
+            #Панель дислокаций	W00-0289
+            $Check = $null
+            $Check = $Bad_PC.UsedRange.find($a)
+            if($Check.Text -eq "")
+            {
+                Write-Host "$A PC - НЕДОСТУПЕН"
+                #Запись имени ПК и Имени пользователя
+                $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
+                $BadColumn++
+                $Bad_PC.Cells.Item($BadRow, $BadColumn) = $a
+                $BadColumn++
+                $Bad_PC.Cells.Item($BadRow, $BadColumn) = "НЕДОСТУПЕН"
+                $Bad_PC.Cells.Item($BadRow, $BadColumn).font.Color = 255
+                $BadColumn++
+                $Bad_PC.Cells.Item($BadRow, $BadColumn) = $Current_Date
+                $Bad_PC.Cells.Item($BadRow,6) = $Current_Date
+                #$Bad_PC.Cells.Item($BadRow,7).Formula = $Formula
+                $BadRow++
+                $BadColumn = 1
+            }
+            elseif($Check.Text -ne "")
+            {
+                $Check_Col = $False
+                $Target = $Check
+                $First = $Target
+                Do
+                {
+                    Write-Host $Target.Row
+                    # Взяли строку
+                    #
+                    # Cравниваем чекируем
+                       if(($Bad_PC.Cells.Item($Target.Row,1).Text -eq $b) -and ($Bad_PC.Cells.Item($Target.Row,2).Text -eq $a))
+                        {
+                            "Проставляем дату yf CОВПАДЕНИИ"
+                            $Check_Col = $true
+                            $Bad_PC.Cells.Item($Target.Row,6) = $Current_Date
+                        }
+                        elseif(($Bad_PC.Cells.Item($Target.Row,1).Text -ne $b) -and ($Bad_PC.Cells.Item($Target.Row,2).Text -eq $a))
+                        {
+                            "Проставляем дату на несовпадающем"
+                            if($Check_Col -eq $False)
+                            {
+                                "Проставляем дату на несовпадающем"
+                                $Bad_PC.Cells.Item($Target.Row,6) = $Current_Date
+                            }
 
-            $BadColumn = $Check.Column
-            $BadColumn++
-        if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "ДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
-        {
-            $RRW = $Check.Row
-            #Cтатус
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = "НЕДОСТУПЕН"
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn).font.Color = 255
-            $BadColumn++
-            # Дата Падения
-            If($Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
-            {
-                $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
+                        }
+                    $Target = $Bad_PC.UsedRange.FindNext($Target)
+                }
+                While ($Target -ne $NULL -and $Target.AddressLocal() -ne $First.AddressLocal())
+
+                if($Check_Col -eq $False)
+                { 
+                   $BadColumn = 1  
+                   $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
+                   $BadColumn++
+                   $Bad_PC.Cells.Item($BadRow, $BadColumn) = $a
+                   $BadColumn++
+                   $Bad_PC.Cells.Item($BadRow, $BadColumn) = "НЕДОСТУПЕН"
+                   $Bad_PC.Cells.Item($BadRow, $BadColumn).font.Color = 255
+                   $BadColumn++
+                   $Bad_PC.Cells.Item($BadRow, $BadColumn) = $Current_Date
+                   $Bad_PC.Cells.Item($BadRow,6) = $Current_Date
+                   #$Bad_PC.Cells.Item($BadRow,7).Formula = $Formula
+                   $BadRow++
+                   $BadColumn = 1  
+                        
+                }
+                
             }
-            else
-            {
-                #Установлена старая дата! Был недоступен Ранее
-            }
-            $BadColumn++
-            # Дата восстановления
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
-            $BadColumn++
-            #Дата сканирования
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
-            $BadColumn++
-        }
-        elseif($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "ДОСТУПЕН")
-        {
-            $Bad_PC.Cells.Item($Check.Row,6) = $Current_Date
-        }
-        }
+            $Check = $null
         }
 
 }
@@ -627,7 +682,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 
 $Row--
-$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("AJ{0}" -f $Row))
+$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("AH{0}" -f $Row))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
@@ -643,7 +698,7 @@ $DataRangeInventory = $Bad_PC.Range(("A{0}" -f 1), ("G{0}" -f $BadRow))
 }
 
 $Row_Change++
-$DataRangeInventory = $Change_History.Range(("A{0}" -f 1), ("AJ{0}" -f $Row_Change))
+$DataRangeInventory = $Change_History.Range(("A{0}" -f 1), ("AH{0}" -f $Row_Change))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
@@ -691,6 +746,13 @@ $InventoryFile.columns.item('w').ColumnWidth = 7
 $InventoryFile.columns.item('X').ColumnWidth = 7
 $InventoryFile.columns.item('Y').ColumnWidth = 7
 
+#Network Width
+$InventoryFile.columns.item('AA').ColumnWidth = 25
+$InventoryFile.columns.item('AB').ColumnWidth = 17
+$InventoryFile.columns.item('AC').ColumnWidth = 7
+$InventoryFile.columns.item('AD').ColumnWidth = 5
+$InventoryFile.columns.item('AE').ColumnWidth = 7
+$InventoryFile.columns.item('AF').ColumnWidth = 5
 
 $UsedBadRange = $Bad_PC.UsedRange
 $UsedBadRange.EntireColumn.AutoFit() | Out-Null
@@ -727,7 +789,7 @@ foreach($Name in $Work_Range.Rows)
     {
         Write-Host "Пользователи Совпадают!" $InventoryFile.Cells.Item($Test,1).Formula  " "  $InventoryFile.Cells.Item($Test+1,1).Formula
         $TESTO = $Test+1
-        for($i=4;$i -lt 36;$i++)
+        for($i=5;$i -lt 30;$i++)
         {
            if($InventoryFile.Cells.Item($Test,$i).Formula -eq $InventoryFile.Cells.Item($Test+1,$i).Formula)
            {
@@ -742,7 +804,7 @@ foreach($Name in $Work_Range.Rows)
             
         }
 
-        if($ColOfCompare -eq 32)
+        if($ColOfCompare -eq 26)
         {
             $InventoryFile.Rows($Test+1).Delete()
         }
@@ -757,15 +819,72 @@ foreach($Name in $Work_Range.Rows)
         }
     }
 }
-    $WorkBooks.SaveAs("C:\Test\Инвентаризация_Саратов.xlsx")
+    #$WorkBooks.SaveAs("C:\Servers\Инвентаризация.xlsx")
 }
 else
 {
     "Первое Заполнение таблицы Выполнено!"
-    $WorkBook.SaveAs("C:\Test\Инвентаризация_Саратов.xlsx")
+
 }
 
+# Cортировка по Имени ПК
+$Filler = [System.Type]::Missing
+$UsedRange = $InventoryFile.UsedRange
+$UsedRange.EntireColumn.AutoFit() | Out-Null
+$T = "B" + $UsedRange.Rows.Count
+$Sorting_Space = $InventoryFile.range("B2:$T" )
+#$Sorting_Space.Select()
+$UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
+
+# Тело Сортировки
+$Work_Range = $InventoryFile.UsedRange
+foreach($NamePC in $Work_Range.Rows)
+{
+    $RRP = $NamePC.Row -as [int]
+    if(($Work_Range.Cells.Item($RRP,1).Formula -eq $Work_Range.Cells.Item($RRP+1,1).Formula) -and ($Work_Range.Cells.Item($RRP,2).Formula -eq $Work_Range.Cells.Item($RRP+1,2).Formula))
+    {
+
+    }
+    elseif(($Work_Range.Cells.Item($RRP,1).Formula -ne $Work_Range.Cells.Item($RRP+1,1).Formula) -and ($Work_Range.Cells.Item($RRP,2).Formula -eq $Work_Range.Cells.Item($RRP+1,2).Formula))
+    {
+        if($Work_Range.Cells.Item($RRP,3).Formula -lt $Work_Range.Cells.Item($RRP+1,3).Formula -and ($Work_Range.Cells.Item($RRP,3) -eq -4142 -or 0 ))
+        {
+                $INDEX = Get-Random -Minimum 2 -Maximum 24
+                $Work_Range.Range("A$RRP","AH$RRP").Interior.ColorIndex = $INDEX
+                $Work_Range.Cells.Item($RRP+1,28).Interior.ColorIndex = $INDEX 
+        }
+        elseif($Work_Range.Cells.Item($RRP,3).Formula -gt $Work_Range.Cells.Item($RRP+1,3).Formula -and ($Work_Range.Cells.Item($RRP+1,3) -eq -4142 -or 0 ))
+        {
+                $Set = $RRP+1
+                $INDEX = Get-Random -Minimum 2 -Maximum 24
+                $Work_Range.Range("A$SET","AH$SET").Interior.ColorIndex = $INDEX 
+                $Work_Range.Cells.Item($RRP,28).Interior.ColorIndex = $INDEX  
+
+        }
+    }
+    
+}
+
+# Восстановление сортировки по имени пользователя.
+$Filler = [System.Type]::Missing
+$UsedRange = $InventoryFile.UsedRange
+$UsedRange.EntireColumn.AutoFit() | Out-Null
+$T = "A" + $UsedRange.Rows.Count
+$Sorting_Space = $InventoryFile.range("A2:$T" )
+#$Sorting_Space.Select()
+$UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
+
+$InventoryFile.Range("AI1:AN200").Delete()
+
+if($Configuration_Start -eq 0){
+$WorkBook.SaveAs("C:\Servers\Инвентаризация_Cаратов.xlsx")
+}
+else
+{
+
+$WorkBooks.SaveAs("C:\Servers\Инвентаризация_Саратов.xlsx")
+}
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 
 
 
-#[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
