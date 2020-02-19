@@ -196,7 +196,7 @@ elseif($Configuration_Start -eq 1)
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
     $Workbooks = $Excel.Workbooks.Open($FilePath)
-    $InventoryFile.Names("_FilterDatabase").Delete()
+    #$InventoryFile.Names("data").Delete()
     
 
     #Sheets("data").Names("_FilterDatabase").Delete
@@ -260,6 +260,11 @@ $Current_Date = Get-Date -format "dd.MM.yyyy"
  $ImportCsv | ForEach-Object {
 $a=$_.name
 $b=$_.Description
+if(($a -like "*W00-0444*") -or ($a -like "*W00-0602*") -or ($a -like "*W00-0642*") -or ($a -like "W00-0656") -or ($a -like"W00-0366"))
+{
+}
+else
+{
 if ((Test-Connection $a -count 1 -quiet) -eq "True")
 { 
 
@@ -338,14 +343,9 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $Check = ""
         }
 
-
-
-
-        $a
-        $b
         $RowStart = $Row
         Write-Host "$A PC - Доступен!" -ForegroundColor Cyan
-        Write-Host "Проверка компьютера " -ForeGroundColor Green $a "Компьютер" 
+        Write-Host "Проверка компьютера " -ForeGroundColor Green $a 
         #Запись имени пользователя и имени ПК
         $InventoryFile.Cells.Item($Row, $Column) = $b
         $Column++
@@ -370,7 +370,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
 ###########################################################################################
 
         #Модель материнской платы
-        "Материнская плата" 
+        #"Материнская плата" 
         $Parameter = Get-WmiObject -computername $a Win32_BaseBoard | Select-Object Manufacturer, Product, SerialNumber -ErrorAction Stop
         $InventoryFile.Cells.Item($Row, $Column) = $Parameter.Manufacturer
         $Column++
@@ -381,7 +381,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
 ###########################################################################################
 
         # HDD + SSD
-        "Жесткие диски" 
+        #"Жесткие диски" 
 
         $ColemnTemp = $Column
         $RowTemp = $Row
@@ -410,8 +410,8 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $Column=14
         
 ###########################################################################################
-       # ОЗУ
-        "Оперативная память"
+        # ОЗУ
+        # "Оперативная память"
         $ColemnTemp = $Column
         $RowTemp =$Row
         $ColOfElements = 0
@@ -458,7 +458,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         Get-WmiObject -computername $a Win32_videoController | ForEach-Object `
         {
                 
-                if($_.Name -like "Radmin*")
+                if($_.Name -like "Radmin*" -or $_.Name -like "*Remote*")
                 {
                 }
                 else
@@ -537,16 +537,8 @@ $Row++
 $BadColumn = 1
 $RowFinish = $Row
 $Column = 1
-
+Write-Host "Проверка компьютера Завершена! " -ForeGroundColor DarkYellow $a
 $Set = 1
-#For($i = $RowStart;$i -lt $RowFinish;$i++)
-#{
-#    if($InventoryFile.Cells.Item($i+1, $Set) -eq "")
-#    {
-#      $Range = $InventoryFile.Range('A'+$i.ToString(),'A'+$I+1)
-#      $Range.Merge()  
-#    }
-#}
 
 # Formula Excel
 $Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
@@ -558,7 +550,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
         if($Configuration_Start -eq 0)
         {
-        Write-Host "$A PC - НЕДОСТУПЕН"
+        Write-Host "$A PC - НЕДОСТУПЕН" -ForeGroundColor DarkRed
         #Запись имени ПК и Имени пользователя
         $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
         $BadColumn++
@@ -567,7 +559,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 # Заполнение Недоступных ПК
         $Check = $Bad_PC.UsedRange.find("$a")
-                    $RRW = $Check.Row
+        $RRW = $Check.Row
                     
         $BadColumn = $Check.Column
         $BadColumn++
@@ -603,13 +595,13 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
         }
         elseif($Configuration_Start -eq 1)
         {
-            Write-Host "$A PC - НЕДОСТУПЕН"
+            Write-Host "$A PC - НЕДОСТУПЕН" -ForeGroundColor DarkRed
             #Панель дислокаций	W00-0289
             $Check = $null
             $Check = $Bad_PC.UsedRange.find($a)
-            if($Check.Text -eq "")
+            if($Check.Text -eq $null)
             {
-                Write-Host "$A PC - НЕДОСТУПЕН"
+                Write-Host "$A PC обнаружена потеря соединения с ПК" -ForeGroundColor DarkRed
                 #Запись имени ПК и Имени пользователя
                 $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
                 $BadColumn++
@@ -624,20 +616,20 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
                 $BadRow++
                 $BadColumn = 1
             }
-            elseif($Check.Text -ne "")
+            elseif($Check.Text -ne $null)
             {
                 $Check_Col = $False
                 $Target = $Check
                 $First = $Target
                 Do
                 {
-                    Write-Host $Target.Row
+                    #Write-Host $Target.Row
                     # Взяли строку
                     #
                     # Cравниваем чекируем
                        if(($Bad_PC.Cells.Item($Target.Row,1).Text -eq $b) -and ($Bad_PC.Cells.Item($Target.Row,2).Text -eq $a))
                         {
-                            "Проставляем дату yf CОВПАДЕНИИ"
+                            Write-Host "ПК был ранее недоступен" -ForegroundColor DarkRed
                             $Check_Col = $true
                             $Bad_PC.Cells.Item($Target.Row,6) = $Current_Date
                         }
@@ -679,8 +671,23 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 }
 }
+}
 
 
+
+# Проверка всего списка недоступных ПК - Актуализация даты недоступности
+$Bad_Pc_Range = $Bad_PC.UsedRange
+foreach($PC in $Bad_Pc_Range.Rows)
+{
+    $ColOfCompare = 0
+    $Row_PC = $PC.Row -as [int]
+    if($Bad_PC.Cells.Item($Row_PC,3).Formula -eq "НЕДОСТУПЕН")
+    {
+        #Write-Host $Bad_PC.Cells.Item($Row_PC,2).Formula
+        $Bad_PC.Cells.Item($Row_PC,6).Formula = $Current_Date
+    }
+    
+}
 
 
 $Row--
@@ -808,7 +815,7 @@ foreach($Name in $Work_Range.Rows)
 
         if($ColOfCompare -eq 25)
         {
-            $InventoryFile.Rows($Test+1).Delete()
+            $InventoryFile.Rows($Test+1).Delete() | Out-Null
         }
         else
         {
