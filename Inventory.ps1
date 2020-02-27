@@ -798,7 +798,7 @@ foreach($Name in $Work_Range.Rows)
     {
         Write-Host "Пользователи Совпадают!" $InventoryFile.Cells.Item($Test,1).Formula  " "  $InventoryFile.Cells.Item($Test+1,1).Formula
         $TESTO = $Test+1
-        for($i=5;$i -lt 30;$i++)
+        for($i=4;$i -lt 30;$i++)
         {
            if($InventoryFile.Cells.Item($Test,$i).Formula -eq $InventoryFile.Cells.Item($Test+1,$i).Formula)
            {
@@ -813,7 +813,7 @@ foreach($Name in $Work_Range.Rows)
             
         }
 
-        if($ColOfCompare -eq 25)
+        if($ColOfCompare -eq 26)
         {
             $InventoryFile.Rows($Test+1).Delete() | Out-Null
         }
