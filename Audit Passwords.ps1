@@ -20,7 +20,7 @@ $Domain = "DC=rusagrotrans,DC=ru"
 $Pth = "C:\Scripts\"
 $Pfile = 'C:\Scripts\LOGS\AD_PSSW_'+"$data"+'.csv'
 $DictFile = "C:\Scripts\weak_passwords.txt"
-$OUsss='*DC=rusagrotrans,DC=ru'
+$OU='*DC=rusagrotrans,DC=ru'
 $MailServer = "webmail.rusagrotrans.ru"
 $FromAddress = "weak-passwords@rusagrotrans.ru"
 $strBlankPasswordNThash = '31d6cfe0d16ae931b73c59d7e0c089c0'
@@ -79,7 +79,7 @@ Foreach ($WordlistPath in $DictFile)
 $intBadPasswordsInLists = $htBadPasswords.Count - 1
 Add-content -path $Pfile "Name,Username,NTLMPassword"
 
-$arrUsersAndHashes = Get-ADReplAccount -All -Server $DC -NamingContext $Domain | Where {$_.Enabled -eq $true -and $_.SamAccountType -eq 'User' -and $_.DistinguishedName -like $OUsss} `
+$arrUsersAndHashes = Get-ADReplAccount -All -Server $DC -NamingContext $Domain | Where {$_.Enabled -eq $true -and $_.SamAccountType -eq 'User' -and $_.DistinguishedName -like $OU} `
 | Select SamAccountName,@{Name="NTHashHex";Expression={ConvertTo-Hex $_.NTHash}}
 $intUsersAndHashesFromAD = $arrUsersAndHashes.Count
 
