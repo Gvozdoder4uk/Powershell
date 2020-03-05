@@ -68,6 +68,64 @@ $Bad_PC.Rows.Item(1).WrapText = $true
 $Bad_PC.Rows.Item(1).HorizontalAlignment = -4108
 
 
+
+#Основная инвентаризационная страница ЦО
+$Archive = $WorkBook.Worksheets.Item(2)
+$Archive.columns.item('i').NumberFormat = "@"
+$Archive.Rows.Item(1).HorizontalAlignment = -4108
+$Archive.Columns.Item('u').HorizontalAlignment = -4108
+$Archive.Columns.Item('w').HorizontalAlignment = -4108
+$Archive.Columns.Item('y').HorizontalAlignment = -4108
+$Archive.Cells.Item(1,1) = 'Имя Пользователя'
+$Archive.Cells.Item(1,2) = 'Сетевое имя'
+$Archive.Cells.Item(1,3) = 'Дата Проверки'
+$Archive.Cells.Item(1,4) = 'OS'
+$Archive.Cells.Item(1,5) = 'Процессор'
+$Archive.Cells.Item(1,6) = 'Модель'
+$Archive.Cells.Item(1,7) = 'Материнская плата'
+$Archive.Cells.Item(1,8) = 'Модель'
+$Archive.Cells.Item(1,9) = 'Серийный номер'
+#Column HDD Start 8
+$Archive.Cells.Item(1,10) = 'HDD 1'
+$Archive.Cells.Item(1,11) = 'HDD 2'
+$Archive.Cells.Item(1,12) = 'HDD 3'
+$Archive.Cells.Item(1,13) = 'HDD 4'
+#$Archive.Cells.Item(1,9) = 'Объем (Гб)'
+#Column OZY START 14
+$Archive.Cells.Item(1,14) = 'Суммарно ОЗУ (Гб)'
+$Archive.Cells.Item(1,15) = 'Тип Памяти'
+$Archive.Cells.Item(1,16) = 'ОЗУ 1 (ГБ)'
+$Archive.Cells.Item(1,17) = 'ОЗУ 2 (ГБ)'
+$Archive.Cells.Item(1,18) = 'ОЗУ 3 (ГБ)'
+$Archive.Cells.Item(1,19) = 'ОЗУ 4 (ГБ)'
+# Column Video Start 20
+$Archive.Cells.Item(1,20) = 'Видеокарта 1'
+$Archive.Cells.Item(1,21) = 'Объем памяти (MB)'
+$Archive.Cells.Item(1,22) = 'Видеокарта 2'
+$Archive.Cells.Item(1,23) = 'Объем памяти (MB)'
+$Archive.Cells.Item(1,24) = 'Видеокарта 3'
+$Archive.Cells.Item(1,25) = 'Объем памяти (MB)'
+$Archive.Cells.Item(1,25) = 'Видеокарта 3'
+$Archive.Cells.Item(1,26) = 'Объем памяти (MB)'
+#Column Network Start
+$Archive.Cells.Item(1,27) = 'Cетевая Карта 1'
+$Archive.Cells.Item(1,28) = 'MAC'
+$Archive.Cells.Item(1,29) = 'Cетевая Карта 2'
+$Archive.Cells.Item(1,30) = 'MAC'
+#Column Availabilyty  31
+$Archive.Cells.Item(1,31) = 'Монитор №1'
+$Archive.Cells.Item(1,32) = 'Монитор №2'
+$Archive.Cells.Item(1,33) = 'Монитор №3'
+$Archive.Cells.Item(1,34) = 'Монитор №4'
+$Archive.Name = 'Архив'
+$Range = $Archive.Range("A1","AI1")
+$Range.AutoFit()
+$Range.WrapText = $True
+$Range.AutoFilter() | Out-Null
+$Range.Interior.ColorIndex = 15
+# Выделяем жирным шапку таблицы
+$Archive.Rows.Item(1).Font.Bold = $true
+
 #Страница Изменений
 $Change_History = $Excel.Worksheets.Add()
 $Change_History  = $WorkBook.Worksheets.Item(2)
@@ -119,7 +177,7 @@ $Change_History.Cells.Item(1,34) = 'MAC'
 
 
 
-$Range = $Change_History.Range("A1","AJ1")
+$Range = $Change_History.Range("A1","AI1")
 $Range.AutoFilter() | Out-Null
 $Range.Interior.ColorIndex = 15
 
@@ -178,13 +236,15 @@ $InventoryFile.Cells.Item(1,32) = 'Монитор №2'
 $InventoryFile.Cells.Item(1,33) = 'Монитор №3'
 $InventoryFile.Cells.Item(1,34) = 'Монитор №4'
 $InventoryFile.Name = 'Инвентаризация ЦО'
-$Range = $InventoryFile.Range("A1","AJ1")
+$Range = $InventoryFile.Range("A1","AI1")
 $Range.AutoFit()
 $Range.WrapText = $True
 $Range.AutoFilter() | Out-Null
 $Range.Interior.ColorIndex = 15
 # Выделяем жирным шапку таблицы
 $InventoryFile.Rows.Item(1).Font.Bold = $true
+
+
 
 
 }
@@ -196,7 +256,7 @@ elseif($Configuration_Start -eq 1)
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
     $Workbooks = $Excel.Workbooks.Open($FilePath)
-    #$InventoryFile.Names("data").Delete()
+    #$InventoryFile.Names("data12").Delete()
     
 
     #Sheets("data").Names("_FilterDatabase").Delete
@@ -214,9 +274,9 @@ $Bad_PC  = $WorkBooks.Worksheets.Item(3)
 # Change_History Selection
 $Change_History  = $WorkBooks.Worksheets.Item(2)
 
-$Row_Change = 2
-$Column_Change = 1
-$Initial_Change_Row = 2
+# Archive Selection
+$Archive = $WorkBooks.Worksheets.Item(4)
+
 
 
 $UsedRangeMain = $InventoryFile.UsedRange
@@ -227,6 +287,10 @@ $RowBad_New = $UsedRangeBad.Rows.Count
 
 $UsedRangeChange = $Change_History.UsedRange
 $RowChange_New = $UsedRangeChange.Rows.Count
+
+
+$UsedRangeArchive = $Archive.UsedRange
+$Row_Archive_New = $UsedRangeArchive.Rows.Count
 
 # INVENTORY
 $Column = 1
@@ -244,6 +308,10 @@ $Column_Change = 1
 $Row_Change = $RowChange_New+1
 $Initial_Change_Row = $RowChange_New+1
 
+# ARCHIVE 
+$Column_Archive = 1
+$Row_Archive = $Row_Archive_New+1
+$Initial_Archive_Row = $Row_Archive_New+1
 
 
 
@@ -351,7 +419,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
         $Column++
         $InventoryFile.Cells.Item($Row, $Column) = $a
         $Column++
-        $InventoryFile.Cells.Item($Row, $Column) = $Current_Date
+        $InventoryFile.Cells.Item($Row, $Column) = Get-Date
         $Column++
         # Получение сведений об ОС
         $Parameter  = Get-WmiObject -computername $a Win32_OperatingSystem | Select-Object csname, caption, Serialnumber, csdVersion  -ErrorAction Stop
@@ -691,7 +759,7 @@ foreach($PC in $Bad_Pc_Range.Rows)
 
 
 $Row--
-$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("AH{0}" -f $Row))
+$DataRangeInventory = $InventoryFile.Range(("A{0}" -f 1), ("AI{0}" -f $Row))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
@@ -707,7 +775,7 @@ $DataRangeInventory = $Bad_PC.Range(("A{0}" -f 1), ("G{0}" -f $BadRow))
 }
 
 $Row_Change++
-$DataRangeInventory = $Change_History.Range(("A{0}" -f 1), ("AH{0}" -f $Row_Change))
+$DataRangeInventory = $Change_History.Range(("A{0}" -f 1), ("AI{0}" -f $Row_Change))
 7..12 | ForEach-Object `
 {
     $DataRangeInventory.Borders.Item($_).LineStyle = 1
@@ -849,30 +917,89 @@ $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 $Work_Range = $InventoryFile.UsedRange
 foreach($NamePC in $Work_Range.Rows)
 {
+    
     $RRP = $NamePC.Row -as [int]
     if(($Work_Range.Cells.Item($RRP,1).Formula -eq $Work_Range.Cells.Item($RRP+1,1).Formula) -and ($Work_Range.Cells.Item($RRP,2).Formula -eq $Work_Range.Cells.Item($RRP+1,2).Formula))
     {
-
+     "Все параметры равны"
     }
     elseif(($Work_Range.Cells.Item($RRP,1).Formula -ne $Work_Range.Cells.Item($RRP+1,1).Formula) -and ($Work_Range.Cells.Item($RRP,2).Formula -eq $Work_Range.Cells.Item($RRP+1,2).Formula))
     {
-        if($Work_Range.Cells.Item($RRP,3).Formula -lt $Work_Range.Cells.Item($RRP+1,3).Formula -and ($Work_Range.Cells.Item($RRP,3) -eq -4142 -or 0 ))
+    $Work_Range.Cells.Item($RRP,2).Formula
+    $Work_Range.Cells.Item($RRP+1,2).Value2
+        if($Work_Range.Cells.Item($RRP,3).Formula -lt $Work_Range.Cells.Item($RRP+1,3).Formula -and ($Work_Range.Cells.Item($RRP,3).Interior.ColorIndex -eq -4142 -or 0 ))
         {
                 $INDEX = Get-Random -Minimum 2 -Maximum 24
-                $Work_Range.Range("A$RRP","AH$RRP").Interior.ColorIndex = $INDEX
-                $Work_Range.Cells.Item($RRP+1,28).Interior.ColorIndex = $INDEX 
+                $Work_Range.Range("A$RRP","AI$RRP").Interior.ColorIndex = $INDEX
+                $Work_Range.Cells.Item($RRP,35) = $Work_Range.Cells.Item($RRP+1,1)
+                $Work_Range.Cells.Item($RRP+1,28).Interior.ColorIndex = $INDEX
+                $Work_Range.Cells.Item($RRP+1,35) = $Work_Range.Cells.Item($RRP,1)
+                $InventoryFile.Hyperlinks.Add( `
+                $InventoryFile.Cells.Item($RRP+1,35) , `
+                "" , "Архив!A$Row_Archive", "", $Work_Range.Cells.Item($RRP,1).Value2)
+                $Range = $Work_Range.Range("A$RRP","AI$RRP")
+                $Range.Cut()
+                $Insert_Into = $Archive.Rows($Row_Archive)
+                $Archive.Paste($Insert_Into)
+                $InventoryFile.Rows($RRP).Delete() 
+                $Row_Archive++
         }
-        elseif($Work_Range.Cells.Item($RRP,3).Formula -gt $Work_Range.Cells.Item($RRP+1,3).Formula -and ($Work_Range.Cells.Item($RRP+1,3) -eq -4142 -or 0 ))
+        elseif($Work_Range.Cells.Item($RRP,3).Formula -gt $Work_Range.Cells.Item($RRP+1,3).Formula -and ($Work_Range.Cells.Item($RRP+1,3).Interior.ColorIndex -eq -4142 -or 0 ))
         {
                 $Set = $RRP+1
                 $INDEX = Get-Random -Minimum 2 -Maximum 24
-                $Work_Range.Range("A$SET","AH$SET").Interior.ColorIndex = $INDEX 
-                $Work_Range.Cells.Item($RRP,28).Interior.ColorIndex = $INDEX  
-
+                $Work_Range.Range("A$SET","AI$SET").Interior.ColorIndex = $INDEX
+                $Work_Range.Cells.Item($RRP+1,35) = $Work_Range.Cells.Item($RRP,1) 
+                $Work_Range.Cells.Item($RRP,28).Interior.ColorIndex = $INDEX 
+                $Work_Range.Cells.Item($RRP,35) = $Work_Range.Cells.Item($RRP+1,1)
+                $InventoryFile.Hyperlinks.Add( `
+                $InventoryFile.Cells.Item($RRP,35) , `
+                "" , "Архив!A$Row_Archive", "", $Work_Range.Cells.Item($RRP+1,1).Value2)
+                $Range = $Work_Range.Range("A$SET","AI$SET")
+                $Range.Cut()
+                $Insert_Into = $Archive.Rows($Row_Archive)
+                $Archive.Paste($Insert_Into)
+                $InventoryFile.Rows($RRP+1).Delete()
+                $Row_Archive++
+        }
+        else
+        {
+         
         }
     }
     
 }
+
+
+# Cортировка по MAC Адресу
+$Filler = [System.Type]::Missing
+$UsedRange = $InventoryFile.UsedRange
+$UsedRange.EntireColumn.AutoFit() | Out-Null
+$T = "AB" + $UsedRange.Rows.Count
+$Sorting_Space = $InventoryFile.range("AB2:$T" )
+$UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
+# Проверка на совпадения МАК Адресов
+$Work_Range = $InventoryFile.UsedRange
+foreach($NamePC in $Work_Range.Rows)
+{
+    $RRP = $NamePC.Row -as [int]
+    if(($Work_Range.Cells.Item($RRP,28).Formula -eq $Work_Range.Cells.Item($RRP+1,28).Formula) -and ($Work_Range.Cells.Item($RRP,28).Formula -ne "" -or $Work_Range.Cells.Item($RRP+1,28).Formula -ne ""))
+    {
+     "МАКИ РАВНЫ!"
+     $Work_Range.Cells.Item($RRP,2).Formula
+    }
+    elseif(($Work_Range.Cells.Item($RRP,28).Formula -ne $Work_Range.Cells.Item($RRP+1,28).Formula))
+    {
+    #$Work_Range.Cells.Item($RRP,2).Formula
+    #$Work_Range.Cells.Item($RRP+1,2).Value2 
+    }
+}
+
+
+
+
+
+
 
 # Восстановление сортировки по имени пользователя.
 $Filler = [System.Type]::Missing
@@ -883,7 +1010,7 @@ $Sorting_Space = $InventoryFile.range("A2:$T" )
 #$Sorting_Space.Select()
 $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 
-$InventoryFile.Range("AI1:AN200").Delete()
+$InventoryFile.Range("AJ1:AN200").Delete()
 
 if($Configuration_Start -eq 0){
 $WorkBook.SaveAs("C:\Test\Инвентаризация.xlsx")
@@ -896,4 +1023,66 @@ $WorkBooks.SaveAs("C:\Test\Инвентаризация.xlsx")
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 
 
+
+
+
+
+
+
+
+# Мега Мылинг
+#
+# Формирование тела Письма
+$EmailBody = @"
+<html>
+  <style>
+h1{ine-height:50%;}
+h5{line-height:1px;}
+#nol {font-size:11px;line-height:20px;padding:5px;border:5px solid #456;}
+</style>
+<head>
+</head>
+<body>
+<div id="nol">
+
+<h2 style="color:green">Добрый день <strong></strong></h2>
+<b>
+<h4>Был выполнен ежедневный сбор инвентаризацонных данных по компании <strong>"АО Русагротранс"</strong></h4>
+<p></p>
+<h4>Вы можете ознакомиться с результатами перейдя по ссылке:
+<p><a href="\\mskfs\Groups\Департамент информационных технологий\ОУИИ ДИТ\Инвентаризация\Инвентаризация.xlsx">Инвентаризационные данные</a></p></h4>
+<h4>Или воспользоваться переходом в папку с файлом:
+<p><a href="\\mskfs\Groups\Департамент информационных технологий\ОУИИ ДИТ\Инвентаризация\">Папка Инвентаризации</a></p></h4>
+<h4>Сбор инвентаризационных данных выполняется ежедневно в 10:30(MSK).</h4>
+<b>
+
+<h3 style="color:red">Данное письмо сформировано автоматически и отвечать на него не нужно.</h3>
+</div>
+
+<p>С Уважением,
+  Вумный админ "АО Русагротранс"</p>
+</body>
+</html>
+"@
+#
+# Заполнение данных для письма
+$EmailFrom = "Инвентаризация ЦО <inventory@rusagrotrans.ru>"
+$ToAddress = "fokin_ok@rusagrotrans.ru"
+#$ToAddress2 = "orlov_pa@rusagrotrans.ru"
+$Subject = "Инвентаризация за $Current_Date!"
+$Body = $EmailBody
+$Msg = New-Object Net.Mail.MailMessage
+$Msg.From = $EmailFrom
+$Msg.To.Add($ToAddress)
+#$Msg.To.Add($ToAddress2)
+$Msg.Subject = $Subject
+$Msg.Body = $Body
+$Msg.IsBodyHTML = $true
+$Msg.Priority = [System.Net.Mail.MailPriority]::High
+ 
+$SMTPServer = "webmail.rusagrotrans.ru" 
+$SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 25)
+$SMTPClient.EnableSsl = $False
+#$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($CredUser, $CredPassword); 
+$SMTPClient.Send($Msg)
 
