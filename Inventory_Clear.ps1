@@ -1,36 +1,4 @@
-﻿##[Ps1 To Exe]
-##
-##Kd3HDZOFADWE8uO1
-##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU6Piux47c
-##Kd3HFJGZHWLWoLaVvnQnhQ==
-##LM/RF4eFHHGZ7/K1
-##K8rLFtDXTiW5
-##OsHQCZGeTiiZ4NI=
-##OcrLFtDXTiW5
-##LM/BD5WYTiiZ4tI=
-##McvWDJ+OTiiZ4tI=
-##OMvOC56PFnzN8u+Vs1Q=
-##M9jHFoeYB2Hc8u+Vs1Q=
-##PdrWFpmIG2HcofKIo2QX
-##OMfRFJyLFzWE8uK1
-##KsfMAp/KUzWJ0g==
-##OsfOAYaPHGbQvbyVvnQX
-##LNzNAIWJGmPcoKHc7Do3uAuO
-##LNzNAIWJGnvYv7eVvnQX
-##M9zLA5mED3nfu77Q7TV64AuzAgg=
-##NcDWAYKED3nfu77Q7TV64AuzAgg=
-##OMvRB4KDHmHQvbyVvnQX
-##P8HPFJGEFzWE8tI=
-##KNzDAJWHD2fS8u+Vgw==
-##P8HSHYKDCX3N8u+Vgw==
-##LNzLEpGeC3fMu77Ro2k3hQ==
-##L97HB5mLAnfMu77Ro2k3hQ==
-##P8HPCZWEGmaZ7/K1
-##L8/UAdDXTlaDjpvb9TF58UT8W1Sbr3VLCFYXFDBeTzRcaRnqe64rYFphkyfoC1mkF/cKUJU=
-##Kc/BRM3KXhU=
-##
-##
-##fd6a9f26a06ea3bc99616d4851b372ba
+﻿
 #############################################
 # Soft For Inventarization
 #
@@ -44,15 +12,14 @@ import-module ActiveDirectory
 
 
 # INITIALIZE FOLDER AND FILES #
-$INI_FOLDER = "C:\Inventory\Саратов\3.Инвентаризация Саратов.xlsx"
-$AD_GREP_FILE = "C:\Inventory\Саратов\SRT_PC.csv"
+
 
 
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "SRT_*"}  -Properties Description |
-Where-Object {$a=$_.name; $_.DistinguishedName -notlike "*OU=Servers,OU=Computers,OU=SRT,DC=rusagrotrans,DC=ru*"} |
+Get-ADComputer -Filter * -Properties Description |
+Where-Object {$a=$_.name; $_.DistinguishedName -notlike "*OU=Servers,OU=Computers,OU=SPB,DC=rusagrotrans,DC=ru*"} |
 Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation "$AD_GREP_FILE" -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:
@@ -234,8 +201,8 @@ $Initial_Change_Row = 2
 
 #Основная инвентаризационная страница ЦО
 $InventoryFile = $Excel.Worksheets.Add()
-$InventoryFile.Name = 'Инвентаризация Ростов'
-$InventoryFile = $WorkBook.Worksheets.Item('Инвентаризация Ростов')
+$InventoryFile.Name = 'Инвентаризация Питер'
+$InventoryFile = $WorkBook.Worksheets.Item('Инвентаризация Питер')
 $InventoryFile.columns.item('i').NumberFormat = "@"
 $InventoryFile.Rows.Item(1).HorizontalAlignment = -4108
 $InventoryFile.Columns.Item('u').HorizontalAlignment = -4108
@@ -374,49 +341,10 @@ $Current_Date = Get-Date -format "dd.MM.yyyy"
  $ImportCsv | ForEach-Object {
 $a=$_.name
 $b=$_.Description
-if(($a -like "*srt_wsus*") -or ($a -like "*W00-0602*") -or ($a -like "*W00-0642*") -or ($a -like "W00-0656") -or ($a -like"W00-0366"))
-{
-}
-else
-{
+
+
 if ((Test-Connection $a -count 1 -quiet) -eq "True")
-{ 
-
-        # Bad_PC Initialize
-        <#if($Configuration_Start -eq 0)
-        {
-        # Заполнение Доступных ПК
-        $Bad_PC.Cells.Item($BadRow, $BadColumn) = $b
-        $BadColumn++
-        $Bad_PC.Cells.Item($BadRow, $BadColumn) = $a
-        $BadColumn++
-        $Check = $Bad_PC.UsedRange.find("$a")
-        $BadColumn = $Check.Column
-        $BadColumn++
-        if($Bad_PC.Cells.Item($Check.Row,$BadColumn).Text -eq "НЕДОСТУПЕН" -or $Bad_PC.Cells.Item($Check.Row,$BadColumn).Value2 -eq $Null)
-        {
-            $RRW = $Check.Row
-            #Cтатус
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = "ДОСТУПЕН"
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn).font.ColorIndex = 10
-            $BadColumn++
-            # Дата Падения
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
-            $BadColumn++
-            # Дата восстановления
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = ""
-            $BadColumn++
-            #Дата сканирования
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn) = $Current_Date
-            $BadColumn++
-            # Расчет кол-ва дней
-            $Bad_PC.Cells.Item($Check.Row,$BadColumn).Formula = "=IF(C$RRW=`"`Недоступен`"`,DATEDIF(D$RRW,F$RRW,`"`d`"`),`"`")"
-        }
-        
-
-
-        }
-        #>
+{
         if($Configuration_Start -eq 1)
         {
          $Check = $Bad_PC.UsedRange.find($a)   
@@ -785,7 +713,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
 
 }
 }
-}
+
 
 
 

@@ -1,7 +1,7 @@
 ﻿##[Ps1 To Exe]
 ##
 ##Kd3HDZOFADWE8uO1
-##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU6Piux47c
+##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU7/iux47c
 ##Kd3HFJGZHWLWoLaVvnQnhQ==
 ##LM/RF4eFHHGZ7/K1
 ##K8rLFtDXTiW5
@@ -26,7 +26,7 @@
 ##LNzLEpGeC3fMu77Ro2k3hQ==
 ##L97HB5mLAnfMu77Ro2k3hQ==
 ##P8HPCZWEGmaZ7/K1
-##L8/UAdDXTlaDjpvb9TF58UT8W1Sbr3VLCFYXFDBeTzRcaRnqe64rYFphkyfoC1mkF/cKUJU=
+##L8/UAdDXTlaDjpvb9TF58UT8W1SbrnVFCFcWJjFiTzjQiQv9drMaX1F5gibuHQW4Qfdy
 ##Kc/BRM3KXhU=
 ##
 ##
@@ -44,15 +44,15 @@ import-module ActiveDirectory
 
 
 # INITIALIZE FOLDER AND FILES #
-$INI_FOLDER = "C:\Inventory\Саратов\3.Инвентаризация Саратов.xlsx"
-$AD_GREP_FILE = "C:\Inventory\Саратов\SRT_PC.csv"
+$INI_FOLDER = "C:\Inventory\Ростов\4.Инвентаризация Ростов.xlsx"
+$AD_GREP_FILE = "C:\Inventory\Ростов\RND_PC.csv"
 
 
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "SRT_*"}  -Properties Description |
-Where-Object {$a=$_.name; $_.DistinguishedName -notlike "*OU=Servers,OU=Computers,OU=SRT,DC=rusagrotrans,DC=ru*"} |
+Get-ADComputer -Filter {Name -Like "RND_*"}  -Properties Description |
+Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
 Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation "$AD_GREP_FILE" -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:

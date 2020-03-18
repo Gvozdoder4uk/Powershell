@@ -1,4 +1,37 @@
-﻿#############################################
+﻿##[Ps1 To Exe]
+##
+##Kd3HDZOFADWE8uO1
+##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU4fiux47c
+##Kd3HFJGZHWLWoLaVvnQnhQ==
+##LM/RF4eFHHGZ7/K1
+##K8rLFtDXTiW5
+##OsHQCZGeTiiZ4NI=
+##OcrLFtDXTiW5
+##LM/BD5WYTiiZ4tI=
+##McvWDJ+OTiiZ4tI=
+##OMvOC56PFnzN8u+Vs1Q=
+##M9jHFoeYB2Hc8u+Vs1Q=
+##PdrWFpmIG2HcofKIo2QX
+##OMfRFJyLFzWE8uK1
+##KsfMAp/KUzWJ0g==
+##OsfOAYaPHGbQvbyVvnQX
+##LNzNAIWJGmPcoKHc7Do3uAuO
+##LNzNAIWJGnvYv7eVvnQX
+##M9zLA5mED3nfu77Q7TV64AuzAgg=
+##NcDWAYKED3nfu77Q7TV64AuzAgg=
+##OMvRB4KDHmHQvbyVvnQX
+##P8HPFJGEFzWE8tI=
+##KNzDAJWHD2fS8u+Vgw==
+##P8HSHYKDCX3N8u+Vgw==
+##LNzLEpGeC3fMu77Ro2k3hQ==
+##L97HB5mLAnfMu77Ro2k3hQ==
+##P8HPCZWEGmaZ7/K1
+##L8/UAdDXTlaDjpvb9TF58UT8W1QYa9eNvKSY7Y+q+uT4tDfAB58MTDQ=
+##Kc/BRM3KXhU=
+##
+##
+##fd6a9f26a06ea3bc99616d4851b372ba
+#############################################
 # Soft For Inventarization
 #
 # Created by Fokin L@B 
@@ -12,12 +45,12 @@ import-module ActiveDirectory
 ############################################
 # Получаем список ПК из AD
 
-#Get-ADComputer -Filter {Name -Like "msk*"} -Properties Description |
-#Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-#Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\Servers\AllComputers.csv  -Encoding UTF8
+Get-ADComputer -Filter "Name -Like 'msk*' -or Name -like '*s00*'" -Properties Description |
+Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
+Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\Servers\Server_List.csv  -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:
-$Config_File = "C:\Servers\cfg.ini"
+$Config_File = "C:\Servers\cfg_servers.ini"
 Get-Content $Config_File| foreach-object -begin {$START=@{}} -process { $k = [regex]::split($_,'='); if(($k[0].CompareTo("") -ne 0) -and ($k[0].StartsWith("[") -ne $True)) { $START.Add($k[0], $k[1]) } }
 $Configuration_Start = $START.Programm_Mode
 
@@ -222,13 +255,19 @@ $Initial_Change_Row = $RowChange_New+1
 
 
 
-$ImportCsv = import-csv C:\Servers\AllComputers.csv
+$ImportCsv = import-csv C:\Servers\Server_List.csv
 
 $Current_Date = Get-Date -format "dd.MM.yyyy"
  
  $ImportCsv | ForEach-Object {
 $a=$_.name
 $b=$_.Description
+if($a -like "MSKIB01")
+{
+
+}
+else
+{
 if ((Test-Connection $a -count 1 -quiet) -eq "True")
 { 
         if($Configuration_Start -eq 1)
@@ -382,7 +421,7 @@ if ((Test-Connection $a -count 1 -quiet) -eq "True")
 
         
 
-        $T = Get-WmiObject -computername MSKTS5 Win32_Physicalmemory | Measure-Object -Property capacity -Sum
+        $T = Get-WmiObject -computername $a Win32_Physicalmemory | Measure-Object -Property capacity -Sum
         $T= $T.Sum/1GB.ToString("F00")
         $InventoryFile.Cells.Item($Row, $Column) = $T
         $Column++
@@ -548,6 +587,7 @@ elseif ((Test-connection $a -count 1 -quiet) -ne "True")
             $Check = $null
         }
 
+}
 }
 }
 

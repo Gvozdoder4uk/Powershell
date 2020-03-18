@@ -1,7 +1,7 @@
 ﻿##[Ps1 To Exe]
 ##
 ##Kd3HDZOFADWE8uO1
-##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU6Piux47c
+##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU6viux47c
 ##Kd3HFJGZHWLWoLaVvnQnhQ==
 ##LM/RF4eFHHGZ7/K1
 ##K8rLFtDXTiW5
@@ -26,7 +26,7 @@
 ##LNzLEpGeC3fMu77Ro2k3hQ==
 ##L97HB5mLAnfMu77Ro2k3hQ==
 ##P8HPCZWEGmaZ7/K1
-##L8/UAdDXTlaDjpvb9TF58UT8W1Sbr3VLCFYXFDBeTzRcaRnqe64rYFphkyfoC1mkF/cKUJU=
+##L8/UAdDXTlaDjpvb9TF58UT8W1Sbk3VFCWQXGjBdTzJcapUB+HqlqOStqgfPJnSUV+QXW+EapshfUAUvTw==
 ##Kc/BRM3KXhU=
 ##
 ##
@@ -44,15 +44,15 @@ import-module ActiveDirectory
 
 
 # INITIALIZE FOLDER AND FILES #
-$INI_FOLDER = "C:\Inventory\Саратов\3.Инвентаризация Саратов.xlsx"
-$AD_GREP_FILE = "C:\Inventory\Саратов\SRT_PC.csv"
+$INI_FOLDER = "C:\Inventory\Новосибирск\7.Инвентаризация Новосибирск.xlsx"
+$AD_GREP_FILE = "C:\Inventory\Новосибирск\NSB_PC.csv"
 
 
 ############################################
 # Получаем список ПК из AD
 
-Get-ADComputer -Filter {Name -Like "SRT_*"}  -Properties Description |
-Where-Object {$a=$_.name; $_.DistinguishedName -notlike "*OU=Servers,OU=Computers,OU=SRT,DC=rusagrotrans,DC=ru*"} |
+Get-ADComputer -Filter {Name -Like "NSB_*"}  -Properties Description |
+Where-Object {$a=$_.name; $_.DistinguishedName -notlike "*OU=Servers,OU=Computers,OU=NSB,DC=rusagrotrans,DC=ru*"} |
 Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation "$AD_GREP_FILE" -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:
@@ -234,8 +234,8 @@ $Initial_Change_Row = 2
 
 #Основная инвентаризационная страница ЦО
 $InventoryFile = $Excel.Worksheets.Add()
-$InventoryFile.Name = 'Инвентаризация Ростов'
-$InventoryFile = $WorkBook.Worksheets.Item('Инвентаризация Ростов')
+$InventoryFile.Name = 'Инвентаризация Новосибирск'
+$InventoryFile = $WorkBook.Worksheets.Item('Инвентаризация Новосибирск')
 $InventoryFile.columns.item('i').NumberFormat = "@"
 $InventoryFile.Rows.Item(1).HorizontalAlignment = -4108
 $InventoryFile.Columns.Item('u').HorizontalAlignment = -4108
@@ -1057,8 +1057,8 @@ $WorkBook.SaveAs($INI_FOLDER)
 }
 else
 {
-$Excel.DisplayAlerts = $False
-$WorkBooks.SaveAs($INI_FOLDER,1)
+
+$WorkBooks.SaveAs($INI_FOLDER)
 }
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 

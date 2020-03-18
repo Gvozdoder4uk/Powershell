@@ -1,4 +1,37 @@
-﻿#############################################
+﻿##[Ps1 To Exe]
+##
+##Kd3HDZOFADWE8uO1
+##Nc3NCtDXTlaDjpvW7Do31UrtSXsXZ8aU7viux47c
+##Kd3HFJGZHWLWoLaVvnQnhQ==
+##LM/RF4eFHHGZ7/K1
+##K8rLFtDXTiW5
+##OsHQCZGeTiiZ4NI=
+##OcrLFtDXTiW5
+##LM/BD5WYTiiZ4tI=
+##McvWDJ+OTiiZ4tI=
+##OMvOC56PFnzN8u+Vs1Q=
+##M9jHFoeYB2Hc8u+Vs1Q=
+##PdrWFpmIG2HcofKIo2QX
+##OMfRFJyLFzWE8uK1
+##KsfMAp/KUzWJ0g==
+##OsfOAYaPHGbQvbyVvnQX
+##LNzNAIWJGmPcoKHc7Do3uAuO
+##LNzNAIWJGnvYv7eVvnQX
+##M9zLA5mED3nfu77Q7TV64AuzAgg=
+##NcDWAYKED3nfu77Q7TV64AuzAgg=
+##OMvRB4KDHmHQvbyVvnQX
+##P8HPFJGEFzWE8tI=
+##KNzDAJWHD2fS8u+Vgw==
+##P8HSHYKDCX3N8u+Vgw==
+##LNzLEpGeC3fMu77Ro2k3hQ==
+##L97HB5mLAnfMu77Ro2k3hQ==
+##P8HPCZWEGmaZ7/K1
+##L8/UAdDXTlaDjpvb9TF58UT8W1SbknVFCFcXHjFuTzrQlhbydrMaX1F5gibuHQW4Qfdy
+##Kc/BRM3KXhU=
+##
+##
+##fd6a9f26a06ea3bc99616d4851b372ba
+#############################################
 # Soft For Inventarization
 #
 # Created by Fokin L@B 
@@ -9,15 +42,19 @@
 #
 import-module ActiveDirectory
 
+# INITIALIZE FOLDER AND FILES #
+$INI_FOLDER = "C:\Inventory\Москва\1.Инвентаризация ЦО.xlsx"
+$AD_GREP_FILE = "C:\Inventory\Москва\MSK_PC.csv"
+
 ############################################
 # Получаем список ПК из AD
 
 Get-ADComputer -Filter {Name -Like "W00-*"}  -Properties Description |
 Where-Object {$a=$_.name; $_.DistinguishedName -ne "CN=$a,OU=Computers,OU=Disabled,DC=rusagrotrans,DC=ru"} |
-Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation C:\TEST\AllComputers.csv  -Encoding UTF8
+Sort-Object NAME | Select-Object NAME,DESCRIPTION | Export-csv -NoTypeInformation "$AD_GREP_FILE"  -Encoding UTF8
 
 # Инициализация Конфигурационного Файла:
-$Config_File = "C:\Test\cfg.ini"
+$Config_File = "C:\Inventory\cfg.ini"
 Get-Content $Config_File| foreach-object -begin {$START=@{}} -process { $k = [regex]::split($_,'='); if(($k[0].CompareTo("") -ne 0) -and ($k[0].StartsWith("[") -ne $True)) { $START.Add($k[0], $k[1]) } }
 $Configuration_Start = $START.Programm_Mode
 
@@ -251,7 +288,7 @@ $InventoryFile.Rows.Item(1).Font.Bold = $true
 # ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
-    $FilePath = "C:\Test\MyExcel.xlsx"
+    $FilePath = $INI_FOLDER
 
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
@@ -321,7 +358,7 @@ $Initial_Archive_Row = $Row_Archive_New+1
 
 
 
-$ImportCsv = import-csv c:\Test\AllComputers.csv
+$ImportCsv = import-csv $AD_GREP_FILE
 
 $Current_Date = Get-Date -format "dd.MM.yyyy"
  
@@ -1013,12 +1050,12 @@ $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 $InventoryFile.Range("AJ1:AN200").Delete()
 
 if($Configuration_Start -eq 0){
-$WorkBook.SaveAs("C:\Test\Инвентаризация.xlsx")
+$WorkBook.SaveAs($INI_FOLDER)
 }
 else
 {
 
-$WorkBooks.SaveAs("C:\Test\Инвентаризация.xlsx")
+$WorkBooks.SaveAs($INI_FOLDER)
 }
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 
