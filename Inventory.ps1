@@ -40,6 +40,7 @@
 ############################################
 #Import Module ACTIVE DIRECTORY
 #
+taskkill /IM EXCEL.EXE /F
 import-module ActiveDirectory
 
 # INITIALIZE FOLDER AND FILES #
@@ -72,7 +73,7 @@ $Excel.Visible = $true
 
 # Добавляем рабочую книгу
 $WorkBook = $Excel.Workbooks.Add()
-
+Start-Sleep 10
 
 # Определение стратовой площадки записи в файл.
 $Row = 2
@@ -293,9 +294,9 @@ elseif($Configuration_Start -eq 1)
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
     $Workbooks = $Excel.Workbooks.Open($FilePath)
-    #$InventoryFile.Names("data12").Delete()
+    #$InventoryFile.Names("data123").Delete()
     
-
+    Start-Sleep 10
     #Sheets("data").Names("_FilterDatabase").Delete
 
 
@@ -365,7 +366,7 @@ $Current_Date = Get-Date -format "dd.MM.yyyy"
  $ImportCsv | ForEach-Object {
 $a=$_.name
 $b=$_.Description
-if(($a -like "*W00-0444*") -or ($a -like "*W00-0602*") -or ($a -like "*W00-0642*") -or ($a -like "W00-0656") -or ($a -like"W00-0366"))
+if(($a -like "*W00-0444*") -or ($a -like "*W00-0602*") -or ($a -like "*W00-0642*") -or ($a -like "W00-0656") -or ($a -like"W00-0366") -or ($a -like"W00-0084"))
 {
 }
 else
@@ -825,19 +826,19 @@ $Filler = [System.Type]::Missing
 $UsedRange = $InventoryFile.UsedRange
 $UsedRange.EntireColumn.AutoFit() | Out-Null
 $T = "A" + $UsedRange.Rows.Count
-$Sorting_Space = $InventoryFile.range("A2:$T" )
+$Sorting_Space = $InventoryFile.range("A2:$T")
 #$Sorting_Space.Select()
 $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 
 
-
+<#
 $Filler = [System.Type]::Missing
 $UsedRange = $Bad_PC.UsedRange
 $UsedRange.EntireColumn.AutoFit() | Out-Null
 $T = "C" + $UsedRange.Rows.Count
 $Sorting_Space = $Bad_PC.range("C2:$T" )
 #$Sorting_Space.Select()
-$UsedRange.Sort($Sorting_Space,2,$Filler,$Filler,$Filler,$Filler,$Filler,1)
+$UsedRange.Sort($Sorting_Space,2,$Filler,$Filler,$Filler,$Filler,$Filler,1) #>
 
 
 # HDD Width
@@ -880,60 +881,64 @@ if($Configuration_Start -eq 1)
 #Блок проверки поступивших данных и удаление совпадающих.
 
 $Work_Range = $InventoryFile.UsedRange
-#$Work_Range.Rows
 
 foreach($Name in $Work_Range.Rows)
 {
     $ColOfCompare = 0
-    $Test = $Name.Row -as [int]
+    $Current_Row = $Name.Row -as [int]
     #$Test
     $Username = $InventoryFile.Cells.Item($Test,1).Formula
 
-    if($InventoryFile.Cells.Item($Test,3).Formula -eq "") 
+    if($InventoryFile.Cells.Item($Current_Row,3).Formula -eq "") 
     {
-        $InventoryFile.Rows($Test).Delete()
+        $InventoryFile.Rows($Current_Row).Delete()
     }
-    elseif($InventoryFile.Cells.Item($Test+1,3).Formula -eq "" )
+    elseif($InventoryFile.Cells.Item($Current_Row+1,3).Formula -eq "" )
     {
-        $InventoryFile.Rows($Test).Delete()   
+        $InventoryFile.Rows($Current_Row).Delete()   
     }
 
-
-    if($InventoryFile.Cells.Item($Test,1).Formula -eq $InventoryFile.Cells.Item($Test+1,1).Formula -and ($InventoryFile.Cells.Item($Test,1).Formula -ne "" -or $InventoryFile.Cells.Item($Test+1,1).Formula -ne "") -and ($InventoryFile.Cells.Item($Test,3).Formula -ne "" -or $InventoryFile.Cells.Item($Test+1,3).Formula -ne "" ))
+    $Next_Row = $Current_Row+1
+    if($InventoryFile.Cells.Item($Current_Row,1).Formula -eq $InventoryFile.Cells.Item($Next_Row,1).Formula -and ($InventoryFile.Cells.Item($Current_Row,1).Formula -ne "" -or $InventoryFile.Cells.Item($Next_Row,1).Formula -ne "") -and ($InventoryFile.Cells.Item($Current_Row,3).Formula -ne "" -or $InventoryFile.Cells.Item($Next_Row,3).Formula -ne "" ))
     {
-        Write-Host "Пользователи Совпадают!" $InventoryFile.Cells.Item($Test,1).Formula  " "  $InventoryFile.Cells.Item($Test+1,1).Formula
-        $TESTO = $Test+1
-        for($i=4;$i -lt 30;$i++)
+        Write-Host "Пользователи Совпадают!" $InventoryFile.Cells.Item($Current_Row,1).Formula  " "  $InventoryFile.Cells.Item($Next_Row,1).Formula
+
+        for($i=4;$i -lt 28;$i++)
         {
-           if($InventoryFile.Cells.Item($Test,$i).Formula -eq $InventoryFile.Cells.Item($Test+1,$i).Formula)
+           if($InventoryFile.Cells.Item($Current_Row,$i).Formula -eq $InventoryFile.Cells.Item($Next_Row,$i).Formula)
            {
             $ColOfCompare++
+            Write-host "Ячейки $Current_Row,$i и $Next_Row,$i равны"
+            $ColOfCompare
             }
-           elseif($InventoryFile.Cells.Item($Test,$i).Formula -ne $InventoryFile.Cells.Item($Test+1,$i).Formula -and $InventoryFile.Cells.Item($Test,$i).Formula -notcontains "*USB*" -or $InventoryFile.Cells.Item($Test+1,$i).Formula -notcontains "*USB*")
+           elseif($InventoryFile.Cells.Item($Current_Row,$i).Text -ne $InventoryFile.Cells.Item($Next_Row,$i).Text -and $InventoryFile.Cells.Item($Current_Row,$i).Formula -notcontains "*USB*" -or $InventoryFile.Cells.Item($Next_Row,$i).Formula -notcontains "*USB*")
            {
             # Если есть изменения в совпадающих строках
-            "Ячейка не равны" + $InventoryFile.Cells.Item($Test,$i).Formula + " " + $InventoryFile.Cells.Item($Test+1,$i).Formula
-            $InventoryFile.Cells.Item($Test,$i).Interior.ColorIndex = 6
+            "Ячейки не равны" + $InventoryFile.Cells.Item($Current_Row,$i).Text + $InventoryFile.Cells.Item($Next_Row,$i).Text
+            $InventoryFile.Cells.Item($Current_Row,$i).Interior.ColorIndex = 6
            }
-            
+
         }
 
-        if($ColOfCompare -eq 26)
+        if($ColOfCompare -eq 24)
         {
-            $InventoryFile.Rows($Test+1).Delete() | Out-Null
+            $ColOfCompare
+            $InventoryFile.Rows($Next_Row).Delete() | Out-Null
         }
         else
         {
-            $Range = $InventoryFile.Rows($Test)
+            $ColOfCompare
+            Write-Host "Выполняем удаление строки"
+            $Range = $InventoryFile.Rows($Current_Row)
             $Range.Cut()
             $Insert_Into = $Change_History.Rows($Row_Change)
             $Change_History.Paste($Insert_Into)
-            $InventoryFile.Rows($Test).Delete()
+            $InventoryFile.Rows($Current_Row).Delete()
             $Row_Change++
         }
     }
 }
-    #$WorkBooks.SaveAs("C:\Test\Инвентаризация.xlsx")
+
 }
 else
 {
@@ -1054,8 +1059,8 @@ $WorkBook.SaveAs($INI_FOLDER)
 }
 else
 {
-
-$WorkBooks.SaveAs($INI_FOLDER)
+$Saver = "C:\Inventory\Москва\1.Инвентаризация ЦО_$Current_Date.xlsx"
+$WorkBooks.SaveAs($Saver)
 }
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 

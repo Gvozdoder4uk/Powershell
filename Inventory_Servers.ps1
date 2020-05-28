@@ -197,7 +197,7 @@ $InventoryFile.Rows.Item(1).Font.Bold = $true
 # ДРУГОЙ РЕЖИМ!
 elseif($Configuration_Start -eq 1)
 {
-    $FilePath = "C:\Servers\MyExcel.xlsx"
+    $FilePath = "C:\Servers\2.Инвентаризация Серверов ЦО.xlsx"
 
     $Excel = New-Object -ComObject Excel.Application
     $Excel.Visible = $true
@@ -702,9 +702,9 @@ foreach($Name in $Work_Range.Rows)
     {
         Write-Host "Пользователи Совпадают!" $InventoryFile.Cells.Item($Test,1).Formula  " "  $InventoryFile.Cells.Item($Test+1,1).Formula
         $TESTO = $Test+1
-        for($i=5;$i -lt 30;$i++)
+        for($i=4;$i -lt 24;$i++)
         {
-           if($InventoryFile.Cells.Item($Test,$i).Formula -eq $InventoryFile.Cells.Item($Test+1,$i).Formula)
+           if($InventoryFile.Cells.Item($Test,$i).Formula -eq $InventoryFile.Cells.Item($Test+1,$i).Formula -or ($InventoryFile.Cells.Item($Test,$i).Formula -eq "N/A") -or ($InventoryFile.Cells.Item($Test,$i).Formula -eq "N/A"))
            {
             $ColOfCompare++
             }
@@ -717,7 +717,7 @@ foreach($Name in $Work_Range.Rows)
             
         }
 
-        if($ColOfCompare -eq 26)
+        if($ColOfCompare -eq 20)
         {
             $InventoryFile.Rows($Test+1).Delete()
         }
@@ -790,12 +790,12 @@ $UsedRange.Sort($Sorting_Space,1,$Filler,$Filler,$Filler,$Filler,$Filler,1)
 $InventoryFile.Range("Y1:AZ200").Delete()
 
 if($Configuration_Start -eq 0){
-$WorkBook.SaveAs("C:\Servers\Инвентаризация_Cерверов.xlsx")
+$WorkBook.SaveAs("C:\Servers\2.Инвентаризация Серверов ЦО.xlsx")
 }
 else
 {
 
-$WorkBooks.SaveAs("C:\Servers\Инвентаризация_Серверов.xlsx")
+$WorkBooks.SaveAs("C:\Servers\2.Инвентаризация Серверов ЦО.xlsx")
 }
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
 

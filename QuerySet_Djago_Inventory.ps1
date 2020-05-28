@@ -1,0 +1,28 @@
+﻿$Excel = New-Object -ComObject Excel.Application
+$FilePath = "1.Инвентаризация_ЦО.xlsx"
+
+$PC_User = $File.Cells.Item($row,1)
+$PC_Name = $File.Cells.Item($row,2)
+$PC_OLD = $File.Cells.Item($row,3)
+$PC_OS = $File.Cells.Item($row,4)
+$PC_Processor = $File.Cells.Item($row,5)
+$PC_Proc_Socket = $File.Cells.Item($row,6)
+$PC_Motherboard = $File.Cells.Item($row,7)
+$PC_Motherboard_Model = $File.Cells.Item($row,9)
+$PC_Motherboard_ID = $File.Cells.Item($row,10)
+$PC_HDD_1 = $File.Cells.Item($row,11)
+$PC_HDD_2 = $File.Cells.Item($row,12)
+$PC_HDD_3 = $File.Cells.Item($row,13)
+$PC_HDD_4 = $File.Cells.Item($row,14)
+$PC_SUM_RAM = $File.Cells.Item($row,15)
+$PC_RAM_TYPE = $File.Cells.Item($row,16)
+$PC_RAM_1 = $File.Cells.Item($row,17)
+$PC_RAM_2 = $File.Cells.Item($row,18)
+$PC_RAM_3 = $File.Cells.Item($row,19)
+$PC_RAM_4 = $File.Cells.Item($row,20)
+$PC_VIDEO_1 = $File.Cells.Item($row,21)
+$PC_VIDEO_2 = $File.Cells.Item($row,23)
+$PC_VIDEO_3 = $File.Cells.Item($row,25)
+$PC_NETWORK_CARD = $File.Cells.Item($row,26)
+$PC_NETWORK_CARD_MAC = $File.Cells.Item($row,27)
+
